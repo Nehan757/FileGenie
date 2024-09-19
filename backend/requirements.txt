@@ -1,0 +1,7 @@
+flask
+flask-cors
+langchain_groq
+langchain
+langchain_community
+python-dotenv
+gunicorn
