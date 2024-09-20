@@ -28,6 +28,7 @@ google-generativeai
 googleapis-common-protos
 groq
 grpcio
+gunicorn
 httpcore
 httplib2
 httpx
