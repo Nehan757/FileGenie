@@ -15,11 +15,16 @@ import time
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+# Update this line with your frontend URL when you deploy
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://filegenie.onrender.com"]}})
 
 groq_api_key = os.getenv('GROQ_API_KEY')
-os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+google_api_key = os.getenv("GOOGLE_API_KEY")
 
+if not google_api_key:
+    raise ValueError("GOOGLE_API_KEY is not set in the environment variables")
+
+os.environ["GOOGLE_API_KEY"] = google_api_key
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -39,7 +44,6 @@ def upload_files():
         return jsonify({'message': 'Files processed successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/query', methods=['POST'])
 def query_documents():
@@ -72,7 +76,6 @@ def query_documents():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 def vector_embedding(pdf_files):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     loader = PyPDFDirectoryLoader(pdf_files)
@@ -81,9 +84,6 @@ def vector_embedding(pdf_files):
     final_documents = text_splitter.split_documents(docs)
     app.config['vectors'] = FAISS.from_documents(final_documents, embeddings)
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
