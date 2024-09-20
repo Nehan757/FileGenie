@@ -11,7 +11,7 @@ click
 dataclasses-json
 distro
 docstring-parser
-faiss-cpu==1.7
+faiss-cpu==1.7.4
 flask-cors
 flask-talisman
 google-ai-generativelanguage
