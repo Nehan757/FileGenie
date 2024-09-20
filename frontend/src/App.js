@@ -4,9 +4,6 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './App.css';
 
-// Use an environment variable for the API URL, defaulting to localhost for development
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 function App() {
   const [files, setFiles] = useState([]);
   const [question, setQuestion] = useState('');
@@ -30,7 +27,7 @@ function App() {
     files.forEach((file) => formData.append('files', file));
 
     try {
-      await axios.post(`${API_URL}/upload`, formData);
+      await axios.post('http://localhost:5000/upload', formData);
       setLoading(false);
     } catch (err) {
       setError('Error uploading files');
@@ -42,7 +39,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post(`${API_URL}/query`, { question });
+      const response = await axios.post('http://localhost:5000/query', { question });
       setAnswer(response.data.answer);
       setContext(response.data.context);
       setLoading(false);
@@ -100,7 +97,7 @@ function App() {
         }}
       />
       <div className="content">
-        <h1>FileGenie</h1>
+        <h1>Gemma Model Document Q&A</h1>
         <div className="upload-section">
           <input type="file" multiple onChange={handleFileChange} />
           <button onClick={handleUpload}>Upload</button>
