@@ -5,7 +5,7 @@ import { loadFull } from "tsparticles";
 import './App.css';
 
 // Define the backend URL
-const BACKEND_URL = 'https://filegeniebackend.onrender.com'; // Replace with your actual Render backend URL
+const BACKEND_URL = 'https://filegenie.onrender.com'; // Replace with your actual Render backend URL
 
 function App() {
   const [files, setFiles] = useState([]);

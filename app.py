@@ -17,7 +17,7 @@ load_dotenv()
 
 app = Flask(__name__)
 # Update CORS configuration for Render
-CORS(app, origins=['https://filegenie.onrender.com'])
+CORS(app, origins=['https://filegenie-1.onrender.com'])
 
 # Get API keys from environment variables
 groq_api_key = os.getenv('GROQ_API_KEY')
