@@ -4,6 +4,9 @@ import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './App.css';
 
+// Define the backend URL
+const BACKEND_URL = 'https://filegeniebackend.onrender.com'; // Replace with your actual Render backend URL
+
 function App() {
   const [files, setFiles] = useState([]);
   const [question, setQuestion] = useState('');
@@ -27,7 +30,7 @@ function App() {
     files.forEach((file) => formData.append('files', file));
 
     try {
-      await axios.post('http://localhost:5000/upload', formData);
+      await axios.post(`${BACKEND_URL}/upload`, formData);
       setLoading(false);
     } catch (err) {
       setError('Error uploading files');
@@ -39,7 +42,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('http://localhost:5000/query', { question });
+      const response = await axios.post(`${BACKEND_URL}/query`, { question });
       setAnswer(response.data.answer);
       setContext(response.data.context);
       setLoading(false);
