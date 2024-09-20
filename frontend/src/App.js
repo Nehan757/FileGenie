@@ -103,7 +103,7 @@ function App() {
         }}
       />
       <div className="content">
-        <h1>Gemma Model Document Q&A</h1>
+        <h1>FileGenie Q&A</h1>
         <div className="upload-section">
           <input type="file" multiple onChange={handleFileChange} />
           <button onClick={handleUpload}>Upload</button>
