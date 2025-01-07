@@ -130,7 +130,7 @@ While FileGenie is primarily a personal project to showcase my skills, I'm open 
 
 ## 📬 Contact & Social
 
-- **LinkedIn**: [LinkedIn](https://www.linkedin.com/in/yourusername/)
+- **LinkedIn**: [LinkedIn](https://www.linkedin.com/in/nehan-tanwar-242984201)
 - **Email**: nehantanwar012@gmail.com
 - **Portfolio**: [Portfolio](https://portfolio-git-main-nehan757s-projects.vercel.app/)
 
