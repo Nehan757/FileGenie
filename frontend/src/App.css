@@ -49,3 +49,26 @@
 .reset-button:hover {
   background-color: #c82333;
 }
+.loading {
+    margin: 20px;
+    color: #3a86ff;
+}
+
+.error {
+    margin: 20px;
+    color: #dc3545;
+}
+
+.upload-section, .query-section {
+    margin: 20px 0;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
