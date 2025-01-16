@@ -30,25 +30,29 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 
 # Session configuration
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_DOMAIN'] = '.onrender.com'
+app.config.update(
+    SECRET_KEY=os.urandom(24),
+    SESSION_TYPE='filesystem',
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE='None',
+    # Remove the domain restriction to allow cookies on nehanworks.space
+    SESSION_COOKIE_DOMAIN=None,
+    PERMANENT_SESSION_LIFETIME=datetime.timedelta(minutes=30)
+)
 Session(app)
 
-# Security configurations
-allowed_hosts = os.getenv('ALLOWED_HOSTS', '').split(',')
-Talisman(app, force_https=True, content_security_policy=None)
+# Update CORS configuration to allow credentials
 CORS(app, resources={r"/*": {
     "origins": [
         "https://filegenie-1.onrender.com",
         "https://filegenie.nehanworks.space",
-        "https://filegenie.onrender.com"
+        "https://filegenie.onrender.com",
+        "https://nehanworks.space"
     ],
     "supports_credentials": True,
     "allow_headers": ["Content-Type"],
-    "methods": ["GET", "POST", "OPTIONS"]
+    "methods": ["GET", "POST", "OPTIONS"],
+    "expose_headers": ["Content-Range", "X-Content-Range"]
 }})
 
 # Get API keys from environment variables
