@@ -19,6 +19,7 @@ import faiss
 import uuid
 import shutil
 from langchain_core.documents import Document
+import datetime
 
 # Load environment variables
 load_dotenv()
