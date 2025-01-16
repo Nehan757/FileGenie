@@ -1,10 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './App.css';
 
-// Update the backend URL
 const BACKEND_URL = 'https://filegenie.onrender.com';
 
 function App() {
@@ -17,6 +16,24 @@ function App() {
 
   const particlesInit = useCallback(async engine => {
     await loadFull(engine);
+  }, []);
+
+  const cleanupSession = async () => {
+    try {
+      await axios.post(`${BACKEND_URL}/cleanup`);
+      setFiles([]);
+      setAnswer('');
+      setContext([]);
+      setError('');
+    } catch (err) {
+      console.error('Cleanup error:', err);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      cleanupSession();
+    };
   }, []);
 
   const handleFileChange = (e) => {
@@ -53,6 +70,12 @@ function App() {
       setError(`Error querying documents: ${err.response?.data?.error || err.message}`);
       setLoading(false);
     }
+  };
+
+  const handleReset = async () => {
+    setLoading(true);
+    await cleanupSession();
+    setLoading(false);
   };
 
   return (
@@ -133,6 +156,9 @@ function App() {
             ))}
           </div>
         )}
+        <button onClick={handleReset} className="reset-button">
+          Reset Session
+        </button>
       </div>
     </div>
   );
