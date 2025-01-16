@@ -6,6 +6,9 @@ import './App.css';
 
 const BACKEND_URL = 'https://filegenie.onrender.com';
 
+// Configure axios defaults
+axios.defaults.withCredentials = true;
+
 function App() {
   const [files, setFiles] = useState([]);
   const [question, setQuestion] = useState('');
@@ -20,7 +23,9 @@ function App() {
 
   const cleanupSession = async () => {
     try {
-      await axios.post(`${BACKEND_URL}/cleanup`);
+      await axios.post(`${BACKEND_URL}/cleanup`, {}, {
+        withCredentials: true
+      });
       setFiles([]);
       setAnswer('');
       setContext([]);
@@ -47,7 +52,9 @@ function App() {
     files.forEach((file) => formData.append('files', file));
 
     try {
-      const response = await axios.post(`${BACKEND_URL}/upload`, formData);
+      const response = await axios.post(`${BACKEND_URL}/upload`, formData, {
+        withCredentials: true
+      });
       console.log('Upload response:', response.data);
       setLoading(false);
     } catch (err) {
@@ -61,7 +68,9 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post(`${BACKEND_URL}/query`, { question });
+      const response = await axios.post(`${BACKEND_URL}/query`, { question }, {
+        withCredentials: true
+      });
       setAnswer(response.data.answer);
       setContext(response.data.context);
       setLoading(false);
