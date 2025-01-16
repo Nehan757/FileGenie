@@ -32,16 +32,24 @@ app = Flask(__name__)
 # Session configuration
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_DOMAIN'] = '.onrender.com'
 Session(app)
 
 # Security configurations
 allowed_hosts = os.getenv('ALLOWED_HOSTS', '').split(',')
 Talisman(app, force_https=True, content_security_policy=None)
-CORS(app, resources={r"/*": {"origins": [
-    "https://filegenie-1.onrender.com",
-    "https://filegenie.nehanworks.space",
-    "https://filegenie.onrender.com"
-]}})
+CORS(app, resources={r"/*": {
+    "origins": [
+        "https://filegenie-1.onrender.com",
+        "https://filegenie.nehanworks.space",
+        "https://filegenie.onrender.com"
+    ],
+    "supports_credentials": True,
+    "allow_headers": ["Content-Type"],
+    "methods": ["GET", "POST", "OPTIONS"]
+}})
 
 # Get API keys from environment variables
 groq_api_key = os.getenv('GROQ_API_KEY')
