@@ -24,6 +24,7 @@ load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
+allowed_hosts = os.getenv('ALLOWED_HOSTS', '').split(',')
 Talisman(app, force_https=True, content_security_policy=None)
 CORS(app, resources={r"/*": {"origins": [
     "https://filegenie-1.onrender.com",
