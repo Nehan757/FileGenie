@@ -25,15 +25,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 Talisman(app, force_https=True, content_security_policy=None)
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "https://filegenie.nehanworks.space",
-            "https://filegenie-1.onrender.com"
-        ],
-        "supports_credentials": True
-    }
-})
+CORS(app, resources={r"/*": {"origins": [
+    "https://filegenie-1.onrender.com",
+    "https://filegenie.nehanworks.space",
+    "https://filegenie.onrender.com"
+]}})
 
 # Get API keys from environment variables
 groq_api_key = os.getenv('GROQ_API_KEY')
