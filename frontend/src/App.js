@@ -24,14 +24,41 @@ function App() {
     const [isMobile, setIsMobile] = useState(false);
 
     // Check if device is mobile
-    useEffect(() => {
-        const checkIsMobile = () => {
-            setIsMobile(window.innerWidth <= 768);
+useEffect(() => {
+        const checkDevice = () => {
+            // Check if device is mobile
+            const mobile = window.innerWidth <= 768;
+            setIsMobile(mobile);
+
+            // Set zoom level to 90% only for desktop
+            if (!mobile) {
+                // Modern browsers
+                document.body.style.zoom = "100%";
+
+                // For Firefox
+                document.body.style.transform = "scale(0.9)";
+                document.body.style.transformOrigin = "top center";
+
+                // For Safari
+                document.body.style.webkitTransform = "scale(0.9)";
+                document.body.style.webkitTransformOrigin = "top center";
+            }
         };
 
-        checkIsMobile();
-        window.addEventListener('resize', checkIsMobile);
-        return () => window.removeEventListener('resize', checkIsMobile);
+        // Run on mount
+        checkDevice();
+
+        // Add resize listener
+        window.addEventListener('resize', checkDevice);
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('resize', checkDevice);
+            // Reset zoom level on unmount
+            document.body.style.zoom = "100%";
+            document.body.style.transform = "none";
+            document.body.style.webkitTransform = "none";
+        };
     }, []);
 
     const particlesInit = useCallback(async engine => {
@@ -193,16 +220,42 @@ function App() {
         }
     };
 
-    return (
-        <div className="App">
+return (
+        <div style={{
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#f5f7fb',
+            overflow: 'auto',
+            padding: '20px'
+        }}>
             {!isMobile && (
                 <Particles
                     id="tsparticles"
                     init={particlesInit}
                     options={particlesOptions}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        zIndex: 0
+                    }}
                 />
             )}
-            <div className="content">
+            <div style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: '1200px',
+                margin: '0 auto',
+                zIndex: 1,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
                 <FileGenieShowcase
                     onFileChange={handleFileChange}
                     onUpload={handleUpload}
@@ -213,23 +266,11 @@ function App() {
                     files={files}
                     answer={answer}
                     context={context}
-                    error={error}
                 />
-                {error && (
-                    <div className="error-message">
-                        {error}
-                    </div>
-                )}
-                <button
-                    onClick={handleReset}
-                    className="reset-button"
-                    disabled={loading}
-                >
-                    Reset Session
-                </button>
             </div>
         </div>
     );
-}
+};
 
 export default App;
+

@@ -168,7 +168,7 @@ const FileGenieShowcase = ({
             marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
             <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
           </div>
           <div style={{
@@ -194,7 +194,7 @@ const FileGenieShowcase = ({
             marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
             <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
           </div>
           <div style={{
