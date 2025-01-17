@@ -33,15 +33,15 @@ useEffect(() => {
             // Set zoom level to 90% only for desktop
             if (!mobile) {
                 // Modern browsers
-                document.body.style.zoom = "100%";
+                document.body.style.zoom = "90%";
 
                 // For Firefox
-                document.body.style.transform = "scale(0.9)";
-                document.body.style.transformOrigin = "top center";
+                document.body.style.transform = "scale(1.0)";
+                document.body.style.transformOrigin = "center";
 
                 // For Safari
                 document.body.style.webkitTransform = "scale(0.9)";
-                document.body.style.webkitTransformOrigin = "top center";
+                document.body.style.webkitTransformOrigin = "center";
             }
         };
 

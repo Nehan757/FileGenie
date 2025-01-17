@@ -124,35 +124,45 @@ const FileGenieShowcase = ({
     fontWeight: '500'
   };
 
-  const slides = [
+  const slideContentStyle = {
+    border: '1px solid #4287f5',
+    borderRadius: '8px',
+    padding: '30px',
+    width: '100%',
+    backgroundColor: '#fff',
+    marginBottom: '20px'
+};
+
+const slides = [
     {
       title: "FileGenie Capabilities",
       content: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '30px',
-          alignItems: 'center',
-          padding: '20px',
-          textAlign: 'center',
-          width: '100%'
-        }}>
-          <div style={{ width: '100%' }}>
-            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Document Understanding</h3>
-            <p>Upload any PDF document - financial reports, research papers, legal documents, technical manuals, and more</p>
-          </div>
+        <div style={slideContentStyle}>
           <div style={{
-            width: '100%',
-            alignSelf: 'flex-end',
-            paddingRight: '0%',
-            textAlign: 'center'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '30px',
+            alignItems: 'center',
+            textAlign: 'center',
+            width: '100%'
           }}>
-            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Intelligent Analysis</h3>
-            <p>Advanced RAG technology reads, understands, and connects information across all your documents</p>
-          </div>
-          <div style={{ width: '100%' }}>
-            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Enhanced Accuracy</h3>
-            <p>Get precise answers with direct references to your documents, not generic responses</p>
+            <div style={{ width: '100%' }}>
+              <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Document Understanding</h3>
+              <p>Upload any PDF document - financial reports, research papers, legal documents, technical manuals, and more</p>
+            </div>
+            <div style={{
+              width: '100%',
+              alignSelf: 'flex-end',
+              paddingRight: '1%',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Intelligent Analysis</h3>
+              <p>Advanced RAG technology reads, understands, and connects information across all your documents</p>
+            </div>
+            <div style={{ width: '100%' }}>
+              <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Enhanced Accuracy</h3>
+              <p>Get precise answers with direct references to your documents, not generic responses</p>
+            </div>
           </div>
         </div>
       )
@@ -160,25 +170,27 @@ const FileGenieShowcase = ({
     {
       title: "Financial Metrics Example",
       content: (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>What are the key financial metrics for Q2 2023?</h3>
-          <div style={{
-            backgroundColor: '#f8f9fa',
-            padding: '20px',
-            marginBottom: '20px',
-            borderRadius: '8px'
-          }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
-            <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
-          </div>
-          <div style={{
-            backgroundColor: '#f0f7ff',
-            padding: '20px',
-            borderRadius: '8px',
-            border: '2px solid #4287f5'
-          }}>
-            <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
-            <p>Based on the uploaded financial report, Q2 2023 showed: Revenue: $12.4M (+15% YoY), EBITDA: $3.2M (25.8% margin), Operating Cash Flow: $2.8M. Notable improvement in gross margins from 62% to 68% compared to previous quarter.</p>
+        <div style={slideContentStyle}>
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>What are the key financial metrics for Q2 2023?</h3>
+            <div style={{
+              backgroundColor: '#f8f9fa',
+              padding: '20px',
+              marginBottom: '20px',
+              borderRadius: '8px'
+            }}>
+              <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+              <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
+            </div>
+            <div style={{
+              backgroundColor: '#f0f7ff',
+              padding: '20px',
+              borderRadius: '8px',
+              border: '2px solid #4287f5'
+            }}>
+              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
+              <p>Based on the uploaded financial report, Q2 2023 showed: Revenue: $12.4M (+15% YoY), EBITDA: $3.2M (25.8% margin), Operating Cash Flow: $2.8M. Notable improvement in gross margins from 62% to 68% compared to previous quarter.</p>
+            </div>
           </div>
         </div>
       )
@@ -186,25 +198,27 @@ const FileGenieShowcase = ({
     {
       title: "Risk Analysis Example",
       content: (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>Summarize the risk factors section.</h3>
-          <div style={{
-            backgroundColor: '#f8f9fa',
-            padding: '20px',
-            marginBottom: '20px',
-            borderRadius: '8px'
-          }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
-            <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
-          </div>
-          <div style={{
-            backgroundColor: '#f0f7ff',
-            padding: '20px',
-            borderRadius: '8px',
-            border: '2px solid #4287f5'
-          }}>
-            <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
-            <p>From your document's risk factors section: Main risks include supply chain disruptions (pg 24), cybersecurity threats (pg 25), market competition in Asia (pg 26). High exposure to semiconductor industry (40% of revenue). New regulatory challenges in EU markets discussed on pages 27-28.</p>
+        <div style={slideContentStyle}>
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>Summarize the risk factors section.</h3>
+            <div style={{
+              backgroundColor: '#f8f9fa',
+              padding: '20px',
+              marginBottom: '20px',
+              borderRadius: '8px'
+            }}>
+              <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+              <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
+            </div>
+            <div style={{
+              backgroundColor: '#f0f7ff',
+              padding: '20px',
+              borderRadius: '8px',
+              border: '2px solid #4287f5'
+            }}>
+              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
+              <p>From your document's risk factors section: Main risks include supply chain disruptions (pg 24), cybersecurity threats (pg 25), market competition in Asia (pg 26). High exposure to semiconductor industry (40% of revenue). New regulatory challenges in EU markets discussed on pages 27-28.</p>
+            </div>
           </div>
         </div>
       )
