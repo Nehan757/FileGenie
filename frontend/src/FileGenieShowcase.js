@@ -395,16 +395,8 @@ const FileGenieShowcase = ({
             borderRadius: '8px',
             textAlign: 'center'
           }}>
-            <h3 style={{ color: '#4287f5', marginBottom: '15px' }}>Answer:</h3>
-            <p style={{ marginBottom: '20px' }}>{answer}</p>
-            {context && context.length > 0 && (
-              <div>
-                <h4 style={{ color: '#4287f5', marginBottom: '15px' }}>Context:</h4>
-                {context.map((text, idx) => (
-                  <p key={idx} style={{ marginBottom: '10px', color: '#666' }}>{text}</p>
-                ))}
-              </div>
-            )}
+           <h3 style={{ color: '#4287f5', marginBottom: '15px' }}>Answer:</h3>
+            <p>{answer}</p>
           </div>
         )}
 
