@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { Card, CardContent } from './components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
+import { FileText, Brain, Sparkles, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 
 const FileGenieShowcase = ({
   onFileChange,
@@ -13,7 +16,6 @@ const FileGenieShowcase = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Style definitions
   const pageStyle = {
     width: '100%',
     display: 'flex',
@@ -47,10 +49,10 @@ const FileGenieShowcase = ({
 
   const slideContainerStyle = {
     width: '100%',
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    position: 'relative',
     minHeight: '400px',
     backgroundColor: '#fff',
     borderRadius: '8px',
@@ -65,11 +67,11 @@ const FileGenieShowcase = ({
     transform: 'translateY(-50%)',
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '0 20px',
-    pointerEvents: 'none'
+    pointerEvents: 'none',
+    zIndex: 2
   };
 
-  const buttonStyle = {
+  const leftButtonStyle = {
     backgroundColor: '#4287f5',
     color: 'white',
     width: '40px',
@@ -83,7 +85,13 @@ const FileGenieShowcase = ({
     fontSize: '20px',
     pointerEvents: 'auto',
     transition: 'background-color 0.2s',
-    zIndex: 2
+    marginLeft: '-40px'
+  };
+
+  const rightButtonStyle = {
+    ...leftButtonStyle,
+    marginLeft: 0,
+    marginRight: '-40px'
   };
 
   const controlsStyle = {
@@ -116,7 +124,7 @@ const FileGenieShowcase = ({
     fontWeight: '500'
   };
 
- const slides = [
+  const slides = [
     {
       title: "FileGenie Capabilities",
       content: (
@@ -135,37 +143,32 @@ const FileGenieShowcase = ({
           </div>
           <div style={{
             width: '100%',
-            alignSelf: 'flex-end', // This will align the container to the right
-            paddingRight: '2%', // This adds some offset from the right edge
-            textAlign: 'center' // Keep text centered within the shifted container
+            alignSelf: 'flex-end',
+            paddingRight: '0%',
+            textAlign: 'center'
           }}>
             <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Intelligent Analysis</h3>
             <p>Advanced RAG technology reads, understands, and connects information across all your documents</p>
           </div>
-          <div style={{
-            width: '100%',
-            alignSelf: 'flex-end', // This will align the container to the right
-            paddingRight: '2%', // This adds some offset from the right edge
-            textAlign: 'center' // Keep text centered within the shifted container
-          }}>
-            <h3 style={{fontSize: '24px', color: '#4287f5', marginBottom: '10px'}}>Enhanced Accuracy</h3>
+          <div style={{ width: '100%' }}>
+            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Enhanced Accuracy</h3>
             <p>Get precise answers with direct references to your documents, not generic responses</p>
           </div>
         </div>
       )
     },
-   {
-     title: "Financial Metrics Example",
-     content: (
-         <div style={{textAlign: 'center', padding: '20px'}}>
-           <h3 style={{fontSize: '24px', marginBottom: '20px'}}>What are the key financial metrics for Q2 2023?</h3>
-           <div style={{
+    {
+      title: "Financial Metrics Example",
+      content: (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>What are the key financial metrics for Q2 2023?</h3>
+          <div style={{
             backgroundColor: '#f8f9fa',
             padding: '20px',
             marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
             <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
           </div>
           <div style={{
@@ -191,7 +194,7 @@ const FileGenieShowcase = ({
             marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
             <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
           </div>
           <div style={{
@@ -228,13 +231,13 @@ const FileGenieShowcase = ({
 
           <div style={navigationStyle}>
             <button
-              style={buttonStyle}
+              style={leftButtonStyle}
               onClick={() => setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
             >
               ←
             </button>
             <button
-              style={buttonStyle}
+              style={rightButtonStyle}
               onClick={() => setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1))}
             >
               →
