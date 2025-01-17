@@ -30,22 +30,24 @@ useEffect(() => {
             const mobile = window.innerWidth <= 768;
             setIsMobile(mobile);
 
-            // Set zoom level to 90% only for desktop
-            if (!mobile) {
-                // Modern browsers
+            if (mobile) {
+                // Set zoom level to 80% for mobile
+                document.body.style.zoom = "80%";
+                document.body.style.transform = "scale(0.8)";
+                document.body.style.transformOrigin = "top center";
+                document.body.style.webkitTransform = "scale(0.8)";
+                document.body.style.webkitTransformOrigin = "top center";
+            } else {
+                // Set zoom level to 90% for desktop
                 document.body.style.zoom = "90%";
-
-                // For Firefox
-                document.body.style.transform = "scale(1.0)";
-                document.body.style.transformOrigin = "center";
-
-                // For Safari
+                document.body.style.transform = "scale(0.9)";
+                document.body.style.transformOrigin = "top center";
                 document.body.style.webkitTransform = "scale(0.9)";
-                document.body.style.webkitTransformOrigin = "center";
+                document.body.style.webkitTransformOrigin = "top center";
             }
         };
 
-        // Run on mount
+        // Initial check and setup
         checkDevice();
 
         // Add resize listener
@@ -58,6 +60,25 @@ useEffect(() => {
             document.body.style.zoom = "100%";
             document.body.style.transform = "none";
             document.body.style.webkitTransform = "none";
+        };
+    }, []);
+
+    // Add meta viewport tag for better mobile handling
+    useEffect(() => {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no';
+        } else {
+            const meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=0.8, maximum-scale=0.8, user-scalable=no';
+            document.head.appendChild(meta);
+        }
+
+        return () => {
+            if (viewport) {
+                viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+            }
         };
     }, []);
 
