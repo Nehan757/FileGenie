@@ -3,6 +3,7 @@ import axios from 'axios';
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import './App.css';
+import FileGenieShowcase from './FileGenieShowcase';
 
 const BACKEND_URL = 'https://filegenie.onrender.com';
 
@@ -147,62 +148,19 @@ function App() {
                 }}
             />
             <div className="content">
-                <h1>FileGenie</h1>
-                <div className="upload-section">
-                    <input 
-                        type="file" 
-                        multiple 
-                        onChange={handleFileChange}
-                        accept=".pdf"
-                    />
-                    <button 
-                        onClick={handleUpload}
-                        disabled={files.length === 0 || loading}
-                    >
-                        Upload
-                    </button>
-                </div>
-                <div className="query-section">
-                    <input
-                        type="text"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        placeholder="Enter your question"
-                        disabled={loading}
-                    />
-                    <button 
-                        onClick={handleQuery}
-                        disabled={!question || loading}
-                    >
-                        Ask
-                    </button>
-                </div>
-                {loading && (
-                    <div className="loading">
-                        <p>Processing your request...</p>
-                    </div>
-                )}
-                {error && (
-                    <div className="error">
-                        <p>{error}</p>
-                    </div>
-                )}
-                {answer && (
-                    <div className="answer-section">
-                        <h2>Answer:</h2>
-                        <p>{answer}</p>
-                    </div>
-                )}
-                {context.length > 0 && (
-                    <div className="context-section">
-                        <h2>Context:</h2>
-                        {context.map((text, index) => (
-                            <p key={index}>{text}</p>
-                        ))}
-                    </div>
-                )}
-                <button 
-                    onClick={handleReset} 
+                <FileGenieShowcase
+                    onFileChange={handleFileChange}
+                    onUpload={handleUpload}
+                    onAsk={handleQuery}
+                    question={question}
+                    setQuestion={setQuestion}
+                    loading={loading}
+                    files={files}
+                    answer={answer}
+                    context={context}
+                />
+                <button
+                    onClick={handleReset}
                     className="reset-button"
                     disabled={loading}
                 >
