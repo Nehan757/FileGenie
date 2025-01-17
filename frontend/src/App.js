@@ -5,9 +5,8 @@ import { loadFull } from "tsparticles";
 import './App.css';
 import FileGenieShowcase from './FileGenieShowcase';
 
-const BACKEND_URL = 'https://filegenie.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://filegenie.onrender.com';
 
-// Global axios configuration
 const axiosConfig = {
     withCredentials: true,
     headers: {
@@ -22,38 +21,118 @@ function App() {
     const [context, setContext] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Check if device is mobile
+    useEffect(() => {
+        const checkIsMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        checkIsMobile();
+        window.addEventListener('resize', checkIsMobile);
+        return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
 
     const particlesInit = useCallback(async engine => {
         await loadFull(engine);
     }, []);
 
-    const cleanupSession = async () => {
-        try {
-            await axios.post(`${BACKEND_URL}/cleanup`, {}, axiosConfig);
-            setFiles([]);
-            setAnswer('');
-            setContext([]);
-            setError('');
-        } catch (err) {
-            console.error('Cleanup error:', err);
-        }
+    const particlesOptions = {
+        background: {
+            color: {
+                value: "#f0f0f0",
+            },
+        },
+        fpsLimit: 60,
+        particles: {
+            color: {
+                value: "#3a86ff",
+            },
+            links: {
+                color: "#3a86ff",
+                distance: 150,
+                enable: true,
+                opacity: 0.5,
+                width: 1,
+            },
+            move: {
+                enable: true,
+                speed: 1,  // Reduced speed for better performance
+                direction: "none",
+                random: false,
+                straight: false,
+                outMode: "bounce",
+                attract: {
+                    enable: false,
+                    rotateX: 600,
+                    rotateY: 1200
+                }
+            },
+            number: {
+                density: {
+                    enable: true,
+                    area: 800,
+                },
+                value: 60,  // Reduced number of particles
+            },
+            opacity: {
+                value: 0.5,
+            },
+            shape: {
+                type: "circle",
+            },
+            size: {
+                value: { min: 1, max: 3 },
+            },
+        },
+        detectRetina: true,
+        responsive: [
+            {
+                maxWidth: 768,
+                options: {
+                    particles: {
+                        number: {
+                            value: 0  // No particles on mobile
+                        }
+                    }
+                }
+            }
+        ]
     };
 
     useEffect(() => {
+        const cleanup = async () => {
+            try {
+                await axios.post(`${BACKEND_URL}/cleanup`, {}, axiosConfig);
+            } catch (err) {
+                console.error('Cleanup error:', err);
+            }
+        };
+
         return () => {
-            cleanupSession();
+            cleanup();
         };
     }, []);
 
     const handleFileChange = (e) => {
-        setFiles(Array.from(e.target.files));
+        const selectedFiles = Array.from(e.target.files);
+        setFiles(selectedFiles);
+        setError('');  // Clear any previous errors
     };
 
     const handleUpload = async () => {
+        if (!files.length) return;
+
         setLoading(true);
         setError('');
+
         const formData = new FormData();
-        files.forEach((file) => formData.append('files', file));
+        files.forEach((file) => {
+            if (file.type === 'application/pdf') {
+                formData.append('files', file);
+            }
+        });
 
         try {
             const response = await axios.post(
@@ -66,18 +145,21 @@ function App() {
                     }
                 }
             );
-            console.log('Upload response:', response.data);
-            setLoading(false);
+            console.log('Upload successful:', response.data);
         } catch (err) {
             console.error('Upload error:', err);
-            setError(`Error uploading files: ${err.response?.data?.error || err.message}`);
+            setError(err.response?.data?.error || 'Error uploading files. Please try again.');
+        } finally {
             setLoading(false);
         }
     };
 
     const handleQuery = async () => {
+        if (!question.trim()) return;
+
         setLoading(true);
         setError('');
+
         try {
             const response = await axios.post(
                 `${BACKEND_URL}/query`,
@@ -86,67 +168,40 @@ function App() {
             );
             setAnswer(response.data.answer);
             setContext(response.data.context);
-            setLoading(false);
         } catch (err) {
             console.error('Query error:', err);
-            setError(`Error querying documents: ${err.response?.data?.error || err.message}`);
+            setError(err.response?.data?.error || 'Error processing your question. Please try again.');
+        } finally {
             setLoading(false);
         }
     };
 
     const handleReset = async () => {
         setLoading(true);
-        await cleanupSession();
-        setLoading(false);
+        try {
+            await axios.post(`${BACKEND_URL}/cleanup`, {}, axiosConfig);
+            setFiles([]);
+            setQuestion('');
+            setAnswer('');
+            setContext([]);
+            setError('');
+        } catch (err) {
+            console.error('Reset error:', err);
+            setError('Error resetting session. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="App">
-            <Particles
-                id="tsparticles"
-                init={particlesInit}
-                options={{
-                    background: {
-                        color: {
-                            value: "#f0f0f0",
-                        },
-                    },
-                    fpsLimit: 120,
-                    particles: {
-                        color: {
-                            value: "#3a86ff",
-                        },
-                        links: {
-                            color: "#3a86ff",
-                            distance: 150,
-                            enable: true,
-                            opacity: 0.5,
-                            width: 1,
-                        },
-                        move: {
-                            enable: true,
-                            speed: 2,
-                        },
-                        number: {
-                            density: {
-                                enable: true,
-                                area: 800,
-                            },
-                            value: 80,
-                        },
-                        opacity: {
-                            value: 0.5,
-                        },
-                        shape: {
-                            type: "circle",
-                        },
-                        size: {
-                            value: { min: 1, max: 3 },
-                        },
-                    },
-                    detectRetina: true,
-                }}
-            />
+            {!isMobile && (
+                <Particles
+                    id="tsparticles"
+                    init={particlesInit}
+                    options={particlesOptions}
+                />
+            )}
             <div className="content">
                 <FileGenieShowcase
                     onFileChange={handleFileChange}
@@ -158,7 +213,13 @@ function App() {
                     files={files}
                     answer={answer}
                     context={context}
+                    error={error}
                 />
+                {error && (
+                    <div className="error-message">
+                        {error}
+                    </div>
+                )}
                 <button
                     onClick={handleReset}
                     className="reset-button"
