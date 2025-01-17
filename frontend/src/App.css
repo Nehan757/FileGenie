@@ -101,3 +101,12 @@ body, html {
   max-width: 800px;
   width: 100%;
 }
+@keyframes blink {
+  0% { opacity: .2; }
+  20% { opacity: 1; }
+  100% { opacity: .2; }
+}
+
+.loading-dots {
+  animation: blink 1.4s infinite both;
+}

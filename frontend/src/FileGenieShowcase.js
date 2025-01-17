@@ -1,7 +1,65 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from './components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from './components/ui/alert';
-import { FileText, Brain, Sparkles, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+const LoadingStates = ({ currentState }) => {
+  const loadingStates = [
+    { id: 'reading', message: 'Reading Documents 📚', emoji: '⏳' },
+    { id: 'chunks', message: 'Creating Text Chunks 📝', emoji: '✂️' },
+    { id: 'embedding', message: 'Generating Embeddings 🔄', emoji: '🧠' },
+    { id: 'vectordb', message: 'Building Vector Database 🗃️', emoji: '⚡' },
+    { id: 'ready', message: 'Ready for Questions! 🎯', emoji: '✨' }
+  ];
+
+  return (
+    <div style={{
+      backgroundColor: '#f8f9fa',
+      padding: '20px',
+      borderRadius: '10px',
+      border: '1px solid #4287f5',
+      width: '100%',
+      maxWidth: '500px',
+      marginTop: '20px'
+    }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '15px',
+        alignItems: 'flex-start'
+      }}>
+        {loadingStates.map((state) => (
+          <div
+            key={state.id}
+            style={{
+              opacity: currentState === state.id ? 1 : 0.4,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '16px',
+              transition: 'all 0.3s ease',
+              width: '100%'
+            }}
+          >
+            <span style={{
+              fontSize: '24px',
+              filter: currentState === state.id ? 'none' : 'grayscale(100%)'
+            }}>
+              {state.emoji}
+            </span>
+            <span>{state.message}</span>
+            {currentState === state.id && (
+              <div style={{
+                marginLeft: 'auto',
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+                <span className="loading-dots">•••</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const FileGenieShowcase = ({
   onFileChange,
@@ -15,6 +73,35 @@ const FileGenieShowcase = ({
   context,
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loadingState, setLoadingState] = useState(null);
+
+  // Simulate loading states when files are being processed
+  useEffect(() => {
+    if (loading && files.length > 0) {
+      const loadingSequence = async () => {
+        setLoadingState('reading');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        setLoadingState('chunks');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        setLoadingState('embedding');
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        setLoadingState('vectordb');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        setLoadingState('ready');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        setLoadingState(null);
+      };
+
+      loadingSequence();
+    } else {
+      setLoadingState(null);
+    }
+  }, [loading, files]);
 
   const pageStyle = {
     width: '100%',
@@ -35,7 +122,8 @@ const FileGenieShowcase = ({
     backgroundColor: '#fff',
     borderRadius: '12px',
     padding: '30px',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    position: 'relative'
   };
 
   const titleStyle = {
@@ -57,6 +145,15 @@ const FileGenieShowcase = ({
     backgroundColor: '#fff',
     borderRadius: '8px',
     padding: '20px'
+  };
+
+  const slideContentStyle = {
+    border: '1px solid #4287f5',
+    borderRadius: '8px',
+    padding: '30px',
+    width: '100%',
+    backgroundColor: '#fff',
+    marginBottom: '20px'
   };
 
   const navigationStyle = {
@@ -124,16 +221,7 @@ const FileGenieShowcase = ({
     fontWeight: '500'
   };
 
-  const slideContentStyle = {
-    border: '1px solid #4287f5',
-    borderRadius: '8px',
-    padding: '30px',
-    width: '100%',
-    backgroundColor: '#fff',
-    marginBottom: '20px'
-};
-
-const slides = [
+  const slides = [
     {
       title: "FileGenie Capabilities",
       content: (
@@ -179,7 +267,7 @@ const slides = [
               marginBottom: '20px',
               borderRadius: '8px'
             }}>
-              <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+              <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
               <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
             </div>
             <div style={{
@@ -188,7 +276,7 @@ const slides = [
               borderRadius: '8px',
               border: '2px solid #4287f5'
             }}>
-              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
+              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>ChatGPT</h4>
               <p>Based on the uploaded financial report, Q2 2023 showed: Revenue: $12.4M (+15% YoY), EBITDA: $3.2M (25.8% margin), Operating Cash Flow: $2.8M. Notable improvement in gross margins from 62% to 68% compared to previous quarter.</p>
             </div>
           </div>
@@ -319,6 +407,8 @@ const slides = [
             )}
           </div>
         )}
+
+        {loadingState && <LoadingStates currentState={loadingState} />}
       </div>
     </div>
   );
