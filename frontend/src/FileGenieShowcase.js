@@ -13,28 +13,48 @@ const FileGenieShowcase = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Styles
+  // Style definitions
+  const pageStyle = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '20px',
+    minHeight: '100vh',
+    backgroundColor: '#f5f7fb'
+  };
+
   const containerStyle = {
     width: '100%',
     maxWidth: '800px',
-    margin: '0 auto',
-    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: '8px'
+    borderRadius: '12px',
+    padding: '30px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
   };
 
   const titleStyle = {
     color: '#4287f5',
-    fontSize: '28px',
+    fontSize: '32px',
     textAlign: 'center',
-    marginBottom: '20px'
+    width: '100%',
+    marginBottom: '30px',
+    fontWeight: 'bold'
   };
 
-  const slideStyle = {
-    minHeight: '300px',
-    padding: '20px',
+  const slideContainerStyle = {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     position: 'relative',
-    marginBottom: '20px'
+    minHeight: '400px',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    padding: '20px'
   };
 
   const navigationStyle = {
@@ -46,76 +66,111 @@ const FileGenieShowcase = ({
     display: 'flex',
     justifyContent: 'space-between',
     padding: '0 20px',
-    pointerEvents: 'none',
-    zIndex: 2
+    pointerEvents: 'none'
   };
 
   const buttonStyle = {
     backgroundColor: '#4287f5',
     color: 'white',
-    border: 'none',
-    borderRadius: '50%',
     width: '40px',
     height: '40px',
+    borderRadius: '50%',
+    border: 'none',
     cursor: 'pointer',
-    pointerEvents: 'auto',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '20px'
+    fontSize: '20px',
+    pointerEvents: 'auto',
+    transition: 'background-color 0.2s',
+    zIndex: 2
   };
 
   const controlsStyle = {
-    marginTop: '20px',
+    width: '100%',
+    maxWidth: '500px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px'
+    gap: '15px',
+    marginTop: '30px'
   };
 
-  const slides = [
+  const inputStyle = {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '6px',
+    border: '1px solid #ddd',
+    textAlign: 'center'
+  };
+
+  const actionButtonStyle = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: '#4287f5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'background-color 0.2s',
+    fontWeight: '500'
+  };
+
+ const slides = [
     {
       title: "FileGenie Capabilities",
       content: (
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
+          gap: '30px',
+          alignItems: 'center',
+          padding: '20px',
           textAlign: 'center',
-          height: '100%',
-          justifyContent: 'center'
+          width: '100%'
         }}>
-          <div>
-            <h3 style={{ marginBottom: '10px' }}>Document Understanding</h3>
+          <div style={{ width: '100%' }}>
+            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Document Understanding</h3>
             <p>Upload any PDF document - financial reports, research papers, legal documents, technical manuals, and more</p>
           </div>
-          <div>
-            <h3 style={{ marginBottom: '10px' }}>Intelligent Analysis</h3>
+          <div style={{
+            width: '100%',
+            alignSelf: 'flex-end', // This will align the container to the right
+            paddingRight: '2%', // This adds some offset from the right edge
+            textAlign: 'center' // Keep text centered within the shifted container
+          }}>
+            <h3 style={{ fontSize: '24px', color: '#4287f5', marginBottom: '10px' }}>Intelligent Analysis</h3>
             <p>Advanced RAG technology reads, understands, and connects information across all your documents</p>
           </div>
-          <div>
-            <h3 style={{ marginBottom: '10px' }}>Enhanced Accuracy</h3>
+          <div style={{
+            width: '100%',
+            alignSelf: 'flex-end', // This will align the container to the right
+            paddingRight: '2%', // This adds some offset from the right edge
+            textAlign: 'center' // Keep text centered within the shifted container
+          }}>
+            <h3 style={{fontSize: '24px', color: '#4287f5', marginBottom: '10px'}}>Enhanced Accuracy</h3>
             <p>Get precise answers with direct references to your documents, not generic responses</p>
           </div>
         </div>
       )
     },
-    {
-      title: "Financial Metrics Example",
-      content: (
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ marginBottom: '20px' }}>What are the key financial metrics for Q2 2023?</h3>
-          <div style={{
+   {
+     title: "Financial Metrics Example",
+     content: (
+         <div style={{textAlign: 'center', padding: '20px'}}>
+           <h3 style={{fontSize: '24px', marginBottom: '20px'}}>What are the key financial metrics for Q2 2023?</h3>
+           <div style={{
             backgroundColor: '#f8f9fa',
-            padding: '15px',
-            marginBottom: '15px',
+            padding: '20px',
+            marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px' }}>Traditional AI</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
             <p>I apologize, but I don't have access to specific Q2 2023 financial metrics. I can only provide general information about financial metrics.</p>
           </div>
           <div style={{
             backgroundColor: '#f0f7ff',
-            padding: '15px',
+            padding: '20px',
             borderRadius: '8px',
             border: '2px solid #4287f5'
           }}>
@@ -128,20 +183,20 @@ const FileGenieShowcase = ({
     {
       title: "Risk Analysis Example",
       content: (
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ marginBottom: '20px' }}>Summarize the risk factors section.</h3>
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>Summarize the risk factors section.</h3>
           <div style={{
             backgroundColor: '#f8f9fa',
-            padding: '15px',
-            marginBottom: '15px',
+            padding: '20px',
+            marginBottom: '20px',
             borderRadius: '8px'
           }}>
-            <h4 style={{ marginBottom: '10px' }}>Traditional AI</h4>
+            <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
             <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
           </div>
           <div style={{
             backgroundColor: '#f0f7ff',
-            padding: '15px',
+            padding: '20px',
             borderRadius: '8px',
             border: '2px solid #4287f5'
           }}>
@@ -154,96 +209,100 @@ const FileGenieShowcase = ({
   ];
 
   return (
-    <div style={containerStyle}>
-      <h1 style={titleStyle}>FileGenie: AI-Powered Document Intelligence</h1>
+    <div style={pageStyle}>
+      <div style={containerStyle}>
+        <h1 style={titleStyle}>FileGenie: AI-Powered Document Intelligence</h1>
 
-      <div style={slideStyle}>
-        <h2 style={{ ...titleStyle, fontSize: '24px' }}>{slides[currentSlide].title}</h2>
-        {slides[currentSlide].content}
+        <div style={slideContainerStyle}>
+          <h2 style={{
+            fontSize: '28px',
+            color: '#4287f5',
+            marginBottom: '30px',
+            textAlign: 'center',
+            width: '100%'
+          }}>
+            {slides[currentSlide].title}
+          </h2>
 
-        <div style={navigationStyle}>
+          {slides[currentSlide].content}
+
+          <div style={navigationStyle}>
+            <button
+              style={buttonStyle}
+              onClick={() => setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
+            >
+              ←
+            </button>
+            <button
+              style={buttonStyle}
+              onClick={() => setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1))}
+            >
+              →
+            </button>
+          </div>
+        </div>
+
+        <div style={controlsStyle}>
+          <input
+            type="file"
+            multiple
+            onChange={onFileChange}
+            accept=".pdf"
+            style={inputStyle}
+          />
           <button
-            style={buttonStyle}
-            onClick={() => setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
+            onClick={onUpload}
+            disabled={!files.length || loading}
+            style={{
+              ...actionButtonStyle,
+              opacity: (!files.length || loading) ? 0.7 : 1
+            }}
           >
-            ←
+            Upload
           </button>
+          <input
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Enter your question"
+            disabled={loading}
+            style={inputStyle}
+          />
           <button
-            style={buttonStyle}
-            onClick={() => setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1))}
+            onClick={onAsk}
+            disabled={!question || loading}
+            style={{
+              ...actionButtonStyle,
+              opacity: (!question || loading) ? 0.7 : 1
+            }}
           >
-            →
+            Ask Question
           </button>
         </div>
-      </div>
 
-      <div style={controlsStyle}>
-        <input
-          type="file"
-          multiple
-          onChange={onFileChange}
-          accept=".pdf"
-          style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
-        />
-        <button
-          onClick={onUpload}
-          disabled={!files.length || loading}
-          style={{
-            backgroundColor: '#4287f5',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1
-          }}
-        >
-          Upload
-        </button>
-        <input
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Enter your question"
-          disabled={loading}
-          style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
-        />
-        <button
-          onClick={onAsk}
-          disabled={!question || loading}
-          style={{
-            backgroundColor: '#4287f5',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: (!question || loading) ? 'not-allowed' : 'pointer',
-            opacity: (!question || loading) ? 0.7 : 1
-          }}
-        >
-          Ask Question
-        </button>
+        {answer && (
+          <div style={{
+            width: '100%',
+            maxWidth: '600px',
+            marginTop: '30px',
+            padding: '20px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ color: '#4287f5', marginBottom: '15px' }}>Answer:</h3>
+            <p style={{ marginBottom: '20px' }}>{answer}</p>
+            {context && context.length > 0 && (
+              <div>
+                <h4 style={{ color: '#4287f5', marginBottom: '15px' }}>Context:</h4>
+                {context.map((text, idx) => (
+                  <p key={idx} style={{ marginBottom: '10px', color: '#666' }}>{text}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {answer && (
-        <div style={{
-          marginTop: '20px',
-          padding: '20px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px'
-        }}>
-          <h3 style={{ color: '#4287f5', marginBottom: '10px' }}>Answer:</h3>
-          <p>{answer}</p>
-          {context && context.length > 0 && (
-            <div style={{ marginTop: '15px' }}>
-              <h4 style={{ color: '#4287f5', marginBottom: '10px' }}>Context:</h4>
-              {context.map((text, idx) => (
-                <p key={idx} style={{ marginBottom: '5px', color: '#666' }}>{text}</p>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
