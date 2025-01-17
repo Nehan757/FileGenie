@@ -32,11 +32,11 @@ useEffect(() => {
 
             if (mobile) {
                 // Set zoom level to 80% for mobile
-                document.body.style.zoom = "80%";
-                document.body.style.transform = "scale(0.8)";
-                document.body.style.transformOrigin = "top center";
-                document.body.style.webkitTransform = "scale(0.8)";
-                document.body.style.webkitTransformOrigin = "top center";
+                document.body.style.zoom = "90%";
+                document.body.style.transform = "scale(0.9)";
+                document.body.style.transformOrigin = "centre center";
+                document.body.style.webkitTransform = "scale(0.9)";
+                document.body.style.webkitTransformOrigin = "centre center";
             } else {
                 // Set zoom level to 90% for desktop
                 document.body.style.zoom = "90%";

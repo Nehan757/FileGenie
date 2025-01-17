@@ -276,7 +276,7 @@ const FileGenieShowcase = ({
               borderRadius: '8px',
               border: '2px solid #4287f5'
             }}>
-              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>ChatGPT</h4>
+              <h4 style={{ marginBottom: '10px', color: '#4287f5' }}>FileGenie</h4>
               <p>Based on the uploaded financial report, Q2 2023 showed: Revenue: $12.4M (+15% YoY), EBITDA: $3.2M (25.8% margin), Operating Cash Flow: $2.8M. Notable improvement in gross margins from 62% to 68% compared to previous quarter.</p>
             </div>
           </div>
@@ -295,7 +295,7 @@ const FileGenieShowcase = ({
               marginBottom: '20px',
               borderRadius: '8px'
             }}>
-              <h4 style={{ marginBottom: '10px', color: '#666' }}>Traditional AI</h4>
+              <h4 style={{ marginBottom: '10px', color: '#666' }}>ChatGPT</h4>
               <p>Without access to the specific document, I can only provide general information about common risk factors.</p>
             </div>
             <div style={{
