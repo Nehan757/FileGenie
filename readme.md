@@ -16,7 +16,7 @@ FileGenie is an advanced document Q&A application I developed to showcase my ski
 
 ### 🔗 Live Demo
 
-Experience FileGenie in action: [https://filegenie.com](https://filegenie-1.onrender.com/)
+Experience FileGenie in action: [https://filegenie.nehanworks.space](https://filegenie-1.onrender.com/)
 
 ## Prerequisites
 
@@ -39,13 +39,13 @@ To set up FileGenie, follow these steps:
 
 2. Set up the backend:
    ```
-   cd backend
+   
    python -m venv venv
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file in the `backend` directory with the following content:
+3. Create a `.env` file in the `parent` directory with the following content:
    ```
    GOOGLE_API_KEY=your_google_api_key_here
    GROQ_API_KEY=your_groq_api_key_here
@@ -63,7 +63,7 @@ To run FileGenie on your local machine, follow these steps:
 
 1. Start the backend server:
    ```
-   cd backend
+
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    python app.py
    ```
