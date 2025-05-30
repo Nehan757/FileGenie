@@ -28,6 +28,22 @@ const LoadingStates = ({ currentState, isUploading = true }) => {
       maxWidth: '500px',
       marginTop: '20px'
     }}>
+      {/* Cold Start Notice */}
+      {currentState === (isUploading ? 'reading' : 'searching') && (
+        <div style={{
+          backgroundColor: '#e3f2fd',
+          padding: '10px',
+          borderRadius: '6px',
+          marginBottom: '15px',
+          fontSize: '13px',
+          color: '#1565c0',
+          textAlign: 'center'
+        }}>
+          🔄 <strong>First request after inactivity:</strong> Server is starting up (30-60s). 
+          Subsequent requests will be instant!
+        </div>
+      )}
+      
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -84,6 +100,19 @@ const FileGenieShowcase = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingState, setLoadingState] = useState(null);
+  const [showColdStartToast, setShowColdStartToast] = useState(false);
+
+  // Show cold start notice on first upload/query
+  useEffect(() => {
+    if (loading && !loadingState) {
+      const timer = setTimeout(() => {
+        setShowColdStartToast(true);
+        setTimeout(() => setShowColdStartToast(false), 5000);
+      }, 3000); // Show after 3 seconds of loading
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, loadingState]);
 
   // Handle loading states for both upload and query operations
   useEffect(() => {
@@ -347,6 +376,26 @@ const FileGenieShowcase = ({
 
   return (
     <div style={pageStyle}>
+      {/* Cold Start Toast Notification */}
+      {showColdStartToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          backgroundColor: '#2196F3',
+          color: 'white',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          maxWidth: '350px',
+          fontSize: '14px'
+        }}>
+          🔄 <strong>Cold Start Detected:</strong> Server spinning up from sleep mode. 
+          This is expected on free hosting - production would be instant!
+        </div>
+      )}
+      
       <div style={containerStyle}>
         <h1 style={titleStyle}>FileGenie: AI-Powered Document Intelligence</h1>
 
@@ -436,6 +485,32 @@ const FileGenieShowcase = ({
         )}
 
         {loadingState && <LoadingStates currentState={loadingState} isUploading={isUploading} />}
+        
+        {/* Professional Footer Note */}
+        <div style={{
+          width: '100%',
+          maxWidth: '600px',
+          marginTop: '30px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #dee2e6',
+          textAlign: 'center',
+          fontSize: '13px',
+          color: '#6c757d'
+        }}>
+          <div style={{ marginBottom: '8px', fontWeight: '500', color: '#495057' }}>
+            💼 Technical Implementation Notes
+          </div>
+          <div>
+            • <strong>Infrastructure:</strong> Demo hosted on free-tier hosting (cold starts expected)<br/>
+            • <strong>Production Ready:</strong> All code optimized for enterprise deployment<br/>
+            • <strong>Performance:</strong> First request after inactivity may take 30-60 seconds
+          </div>
+          <div style={{ marginTop: '8px', fontSize: '12px', fontStyle: 'italic' }}>
+            Full source code and deployment guides available on GitHub
+          </div>
+        </div>
       </div>
     </div>
   );

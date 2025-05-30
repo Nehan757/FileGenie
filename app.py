@@ -37,14 +37,16 @@ logger = logging.getLogger(__name__)
 # Initialize Flask
 app = Flask(__name__)
 
-# Session configuration for production
+# Session configuration - detect environment
+is_production = os.environ.get('RENDER') or os.environ.get('VERCEL')
+
 app.config.update(
-    SECRET_KEY=os.urandom(24),
+    SECRET_KEY=os.environ.get('SECRET_KEY', 'filegenie-development-key-12345'),
     SESSION_TYPE='filesystem',
-    SESSION_COOKIE_SECURE=True,  # HTTPS required in production
-    SESSION_COOKIE_SAMESITE='None',  # Allow cross-site cookies
+    SESSION_COOKIE_SECURE=is_production,  # True for HTTPS in production, False for local HTTP
+    SESSION_COOKIE_SAMESITE='None' if is_production else 'Lax',  # None for cross-domain in production
     SESSION_COOKIE_DOMAIN=None,
-    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_HTTPONLY=False,  # Allow JavaScript access for custom headers
     PERMANENT_SESSION_LIFETIME=datetime.timedelta(minutes=30)
 )
 Session(app)
@@ -60,7 +62,7 @@ CORS(app, resources={r"/*": {
         "https://nehanworks.space"
     ],
     "supports_credentials": True,
-    "allow_headers": ["Content-Type", "Authorization"],
+    "allow_headers": ["Content-Type", "Authorization", "X-User-ID"],
     "methods": ["GET", "POST", "OPTIONS"],
     "expose_headers": ["Content-Range", "X-Content-Range"]
 }})
@@ -105,9 +107,10 @@ def before_request():
     
     # Try to get user_id from custom header first, then from session
     user_id = request.headers.get('X-User-ID')
+    logger.debug(f"X-User-ID header value: {user_id}")
     
     if user_id:
-        logger.debug(f"Using user_id from header: {user_id}")
+        logger.info(f"Using user_id from header: {user_id}")
         session['user_id'] = user_id
     elif 'user_id' not in session:
         user_id = str(uuid.uuid4())

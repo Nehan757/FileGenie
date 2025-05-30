@@ -200,6 +200,7 @@ useEffect(() => {
             if (response.data.user_id) {
                 setUserId(response.data.user_id);
                 console.log('Stored user_id:', response.data.user_id);
+                console.log('Will use this user_id for queries');
             }
         } catch (err) {
             console.error('Upload error:', err);
@@ -213,6 +214,8 @@ useEffect(() => {
 
         setIsUploading(false); // Set to query mode
         setLoading(true);
+        
+        console.log('Making query with user_id:', userId);
 
         try {
             const response = await axios.post(
