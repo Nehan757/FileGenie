@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "FileGenie API Collection",
+    "description": "Complete API collection for testing FileGenie endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["health"]
+        },
+        "description": "Check if the server is running and healthy"
+      }
+    },
+    {
+      "name": "Status Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/status",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["status"]
+        },
+        "description": "Check session status and document availability"
+      }
+    },
+    {
+      "name": "Upload PDF Files",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": [],
+              "description": "Select one or more PDF files to upload"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/upload",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["upload"]
+        },
+        "description": "Upload PDF files for processing. Creates vector embeddings."
+      }
+    },
+    {
+      "name": "Query Documents (JSON)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"What is the main topic of the document?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/query",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["query"]
+        },
+        "description": "Ask questions about uploaded documents using JSON body"
+      }
+    },
+    {
+      "name": "Query Documents (Form Data)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "question",
+              "value": "What is the main topic of the document?",
+              "type": "text",
+              "description": "Your question about the uploaded documents"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/query",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["query"]
+        },
+        "description": "Ask questions about uploaded documents using form data"
+      }
+    },
+    {
+      "name": "Cleanup Session",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/cleanup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["cleanup"]
+        },
+        "description": "Clean up the current session and remove uploaded files"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}

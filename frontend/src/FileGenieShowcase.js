@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
-const LoadingStates = ({ currentState }) => {
-  const loadingStates = [
+const LoadingStates = ({ currentState, isUploading = true }) => {
+  const uploadingStates = [
     { id: 'reading', message: 'Reading Documents 📚', emoji: '⏳' },
     { id: 'chunks', message: 'Creating Text Chunks 📝', emoji: '✂️' },
     { id: 'embedding', message: 'Generating Embeddings 🔄', emoji: '🧠' },
     { id: 'vectordb', message: 'Building Vector Database 🗃️', emoji: '⚡' },
     { id: 'ready', message: 'Ready for Questions! 🎯', emoji: '✨' }
   ];
+  
+  const queryingStates = [
+    { id: 'searching', message: 'Searching Vector Database 🔍', emoji: '🔍' },
+    { id: 'retrieving', message: 'Retrieving Relevant Context 📋', emoji: '📋' },
+    { id: 'processing', message: 'Processing with AI 🤖', emoji: '🧠' },
+    { id: 'generating', message: 'Generating Response ✍️', emoji: '✨' }
+  ];
+  
+  const loadingStates = isUploading ? uploadingStates : queryingStates;
 
   return (
     <div style={{
@@ -71,37 +80,60 @@ const FileGenieShowcase = ({
   files,
   answer,
   context,
+  isUploading = true // New prop to distinguish between upload and query loading
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadingState, setLoadingState] = useState(null);
 
-  // Simulate loading states when files are being processed
+  // Handle loading states for both upload and query operations
   useEffect(() => {
-    if (loading && files.length > 0) {
-      const loadingSequence = async () => {
-        setLoadingState('reading');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    if (loading) {
+      if (isUploading && files.length > 0) {
+        // Upload loading sequence
+        const uploadSequence = async () => {
+          setLoadingState('reading');
+          await new Promise(resolve => setTimeout(resolve, 1500));
 
-        setLoadingState('chunks');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+          setLoadingState('chunks');
+          await new Promise(resolve => setTimeout(resolve, 1500));
 
-        setLoadingState('embedding');
-        await new Promise(resolve => setTimeout(resolve, 2500));
+          setLoadingState('embedding');
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
-        setLoadingState('vectordb');
-        await new Promise(resolve => setTimeout(resolve, 1500));
+          setLoadingState('vectordb');
+          await new Promise(resolve => setTimeout(resolve, 1500));
 
-        setLoadingState('ready');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+          setLoadingState('ready');
+          await new Promise(resolve => setTimeout(resolve, 800));
 
-        setLoadingState(null);
-      };
+          setLoadingState(null);
+        };
 
-      loadingSequence();
+        uploadSequence();
+      } else if (!isUploading) {
+        // Query loading sequence
+        const querySequence = async () => {
+          setLoadingState('searching');
+          await new Promise(resolve => setTimeout(resolve, 800));
+
+          setLoadingState('retrieving');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          setLoadingState('processing');
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          setLoadingState('generating');
+          await new Promise(resolve => setTimeout(resolve, 1200));
+
+          setLoadingState(null);
+        };
+
+        querySequence();
+      }
     } else {
       setLoadingState(null);
     }
-  }, [loading, files]);
+  }, [loading, files, isUploading]);
 
   const pageStyle = {
     width: '100%',
@@ -357,31 +389,34 @@ const FileGenieShowcase = ({
           />
           <button
             onClick={onUpload}
-            disabled={!files.length || loading}
+            disabled={!files.length || loading || loadingState !== null}
             style={{
               ...actionButtonStyle,
-              opacity: (!files.length || loading) ? 0.7 : 1
+              opacity: (!files.length || loading || loadingState !== null) ? 0.7 : 1
             }}
           >
-            Upload
+            {loadingState && isUploading ? 'Processing...' : 'Upload'}
           </button>
           <input
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Enter your question"
-            disabled={loading}
-            style={inputStyle}
+            disabled={loading || loadingState !== null}
+            style={{
+              ...inputStyle,
+              opacity: (loading || loadingState !== null) ? 0.7 : 1
+            }}
           />
           <button
             onClick={onAsk}
-            disabled={!question || loading}
+            disabled={!question || loading || loadingState !== null}
             style={{
               ...actionButtonStyle,
-              opacity: (!question || loading) ? 0.7 : 1
+              opacity: (!question || loading || loadingState !== null) ? 0.7 : 1
             }}
           >
-            Ask Question
+            {loadingState && !isUploading ? 'Processing...' : 'Ask Question'}
           </button>
         </div>
 
@@ -400,7 +435,7 @@ const FileGenieShowcase = ({
           </div>
         )}
 
-        {loadingState && <LoadingStates currentState={loadingState} />}
+        {loadingState && <LoadingStates currentState={loadingState} isUploading={isUploading} />}
       </div>
     </div>
   );

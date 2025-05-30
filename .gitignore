@@ -11,3 +11,6 @@ frontend/.env.local
 # General
 .env
 .DS_Store
+venv
+flask_session
+filegenie.log

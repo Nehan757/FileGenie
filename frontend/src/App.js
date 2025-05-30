@@ -5,7 +5,7 @@ import { loadFull } from "tsparticles";
 import './App.css';
 import FileGenieShowcase from './FileGenieShowcase';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://filegenie.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
 const axiosConfig = {
     withCredentials: true,
@@ -22,6 +22,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isMobile, setIsMobile] = useState(false);
+    const [isUploading, setIsUploading] = useState(true); // Track whether we're uploading or querying
 
     // Check if device is mobile
 useEffect(() => {
@@ -172,6 +173,7 @@ useEffect(() => {
     const handleUpload = async () => {
         if (!files.length) return;
 
+        setIsUploading(true); // Set to upload mode
         setLoading(true);
         setError('');
 
@@ -205,6 +207,7 @@ useEffect(() => {
     const handleQuery = async () => {
         if (!question.trim()) return;
 
+        setIsUploading(false); // Set to query mode
         setLoading(true);
         setError('');
 
@@ -287,6 +290,7 @@ return (
                     files={files}
                     answer={answer}
                     context={context}
+                    isUploading={isUploading}
                 />
             </div>
         </div>
