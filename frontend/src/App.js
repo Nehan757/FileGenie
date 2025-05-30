@@ -5,7 +5,7 @@ import { loadFull } from "tsparticles";
 import './App.css';
 import FileGenieShowcase from './FileGenieShowcase';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://filegenie.onrender.com';
 
 const axiosConfig = {
     withCredentials: true,
@@ -20,7 +20,6 @@ function App() {
     const [answer, setAnswer] = useState('');
     const [context, setContext] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const [isMobile, setIsMobile] = useState(false);
     const [isUploading, setIsUploading] = useState(true); // Track whether we're uploading or querying
 
@@ -167,7 +166,6 @@ useEffect(() => {
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         setFiles(selectedFiles);
-        setError('');  // Clear any previous errors
     };
 
     const handleUpload = async () => {
@@ -175,7 +173,6 @@ useEffect(() => {
 
         setIsUploading(true); // Set to upload mode
         setLoading(true);
-        setError('');
 
         const formData = new FormData();
         files.forEach((file) => {
@@ -198,7 +195,6 @@ useEffect(() => {
             console.log('Upload successful:', response.data);
         } catch (err) {
             console.error('Upload error:', err);
-            setError(err.response?.data?.error || 'Error uploading files. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -209,7 +205,6 @@ useEffect(() => {
 
         setIsUploading(false); // Set to query mode
         setLoading(true);
-        setError('');
 
         try {
             const response = await axios.post(
@@ -221,24 +216,6 @@ useEffect(() => {
             setContext(response.data.context);
         } catch (err) {
             console.error('Query error:', err);
-            setError(err.response?.data?.error || 'Error processing your question. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleReset = async () => {
-        setLoading(true);
-        try {
-            await axios.post(`${BACKEND_URL}/cleanup`, {}, axiosConfig);
-            setFiles([]);
-            setQuestion('');
-            setAnswer('');
-            setContext([]);
-            setError('');
-        } catch (err) {
-            console.error('Reset error:', err);
-            setError('Error resetting session. Please try again.');
         } finally {
             setLoading(false);
         }

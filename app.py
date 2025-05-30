@@ -26,11 +26,10 @@ load_dotenv()
 
 # Configure detailed logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO if os.environ.get('FLASK_ENV') == 'production' else logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
     handlers=[
-        logging.FileHandler('filegenie.log'),
-        logging.StreamHandler()
+        logging.StreamHandler()  # Only console output for Render
     ]
 )
 logger = logging.getLogger(__name__)
@@ -81,6 +80,22 @@ logger.info(f"Using upload folder: {UPLOAD_FOLDER}")
 
 # User data storage
 user_data = {}
+
+@app.route('/', methods=['GET'])
+def index():
+    logger.info("Root endpoint accessed")
+    return jsonify({
+        'message': 'FileGenie API is running',
+        'version': '1.0.0',
+        'status': 'healthy',
+        'endpoints': {
+            'health': '/health',
+            'status': '/status', 
+            'upload': '/upload (POST)',
+            'query': '/query (POST)',
+            'cleanup': '/cleanup (POST)'
+        }
+    }), 200
 
 @app.before_request
 def before_request():
