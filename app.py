@@ -37,13 +37,13 @@ logger = logging.getLogger(__name__)
 # Initialize Flask
 app = Flask(__name__)
 
-# Session configuration
+# Session configuration for production
 app.config.update(
     SECRET_KEY=os.urandom(24),
     SESSION_TYPE='filesystem',
-    SESSION_COOKIE_SECURE=False,  # Set to False for local HTTP development
-    SESSION_COOKIE_SAMESITE='Lax',  # Change from 'None' to 'Lax' for local development
-    SESSION_COOKIE_DOMAIN=None,  # Keep as None for localhost
+    SESSION_COOKIE_SECURE=True,  # HTTPS required in production
+    SESSION_COOKIE_SAMESITE='None',  # Allow cross-site cookies
+    SESSION_COOKIE_DOMAIN=None,
     SESSION_COOKIE_HTTPONLY=True,
     PERMANENT_SESSION_LIFETIME=datetime.timedelta(minutes=30)
 )
@@ -102,17 +102,23 @@ def before_request():
     logger.debug(f"Incoming request: {request.method} {request.path}")
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request args: {dict(request.args)}")
-    logger.debug(f"Session before: {dict(session)}")
     
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
-        logger.info(f"Created new session with user_id: {session['user_id']}")
+    # Try to get user_id from custom header first, then from session
+    user_id = request.headers.get('X-User-ID')
+    
+    if user_id:
+        logger.debug(f"Using user_id from header: {user_id}")
+        session['user_id'] = user_id
+    elif 'user_id' not in session:
+        user_id = str(uuid.uuid4())
+        session['user_id'] = user_id
+        logger.info(f"Created new session with user_id: {user_id}")
     else:
-        logger.debug(f"Existing session user_id: {session['user_id']}")
+        user_id = session['user_id']
+        logger.debug(f"Existing session user_id: {user_id}")
     
-    logger.debug(f"Session after: {dict(session)}")
+    logger.debug(f"Final user_id: {user_id}")
     
-    user_id = session['user_id']
     if user_id not in user_data:
         user_folder = os.path.join(UPLOAD_FOLDER, user_id)
         os.makedirs(user_folder, exist_ok=True)
@@ -178,7 +184,11 @@ def upload_files():
         vector_embedding(user_folder, user_id)
         
         logger.info("=== UPLOAD REQUEST COMPLETED SUCCESSFULLY ===")
-        return jsonify({'message': 'Files processed successfully', 'files_processed': saved_files}), 200
+        return jsonify({
+            'message': 'Files processed successfully', 
+            'files_processed': saved_files,
+            'user_id': user_id
+        }), 200
         
     except Exception as e:
         logger.exception(f"Error during file upload: {str(e)}")

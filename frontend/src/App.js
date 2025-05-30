@@ -22,6 +22,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isUploading, setIsUploading] = useState(true); // Track whether we're uploading or querying
+    const [userId, setUserId] = useState(null); // Store user ID for session management
 
     // Check if device is mobile
 useEffect(() => {
@@ -188,11 +189,18 @@ useEffect(() => {
                 {
                     ...axiosConfig,
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data',
+                        ...(userId && { 'X-User-ID': userId })
                     }
                 }
             );
             console.log('Upload successful:', response.data);
+            
+            // Store the user_id for future requests
+            if (response.data.user_id) {
+                setUserId(response.data.user_id);
+                console.log('Stored user_id:', response.data.user_id);
+            }
         } catch (err) {
             console.error('Upload error:', err);
         } finally {
@@ -210,7 +218,13 @@ useEffect(() => {
             const response = await axios.post(
                 `${BACKEND_URL}/query`,
                 { question },
-                axiosConfig
+                {
+                    ...axiosConfig,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(userId && { 'X-User-ID': userId })
+                    }
+                }
             );
             setAnswer(response.data.answer);
             setContext(response.data.context);
