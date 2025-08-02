@@ -20,6 +20,14 @@ import uuid
 import shutil
 from langchain_core.documents import Document
 import datetime
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+import threading
+import psutil
+import gc
+import redis
+import hashlib
 
 # Load environment variables
 load_dotenv()
@@ -39,6 +47,7 @@ app = Flask(__name__)
 
 # Session configuration - detect environment
 is_production = os.environ.get('RENDER') or os.environ.get('VERCEL')
+is_debug = not is_production and os.environ.get('FLASK_ENV') != 'production'
 
 app.config.update(
     SECRET_KEY=os.environ.get('SECRET_KEY', 'filegenie-development-key-12345'),
@@ -72,16 +81,116 @@ groq_api_key = os.getenv('GROQ_API_KEY')
 google_api_key = os.getenv("GOOGLE_API_KEY")
 os.environ["GOOGLE_API_KEY"] = google_api_key
 
-logger.info(f"Starting FileGenie application...")
-logger.info(f"Groq API Key present: {'Yes' if groq_api_key else 'No'}")
-logger.info(f"Google API Key present: {'Yes' if google_api_key else 'No'}")
+logger.info(f"🧞 FileGenie RAG API initializing...")
+logger.info(f"🔑 Groq API: {'✓' if groq_api_key else '✗'}")
+logger.info(f"🔑 Google API: {'✓' if google_api_key else '✗'}")
 
 # Use a temporary directory for uploads
 UPLOAD_FOLDER = tempfile.gettempdir()
-logger.info(f"Using upload folder: {UPLOAD_FOLDER}")
+logger.info(f"📁 Upload folder: {UPLOAD_FOLDER}")
 
-# User data storage
+# User data storage with thread safety
 user_data = {}
+user_data_lock = threading.RLock()
+
+# Global caches and optimizations
+_embeddings_cache = None
+_embeddings_lock = threading.Lock()
+executor = ThreadPoolExecutor(max_workers=4)
+
+# Redis cache for query responses (optional - falls back to memory if Redis unavailable)
+try:
+    redis_client = redis.Redis(
+        host=os.environ.get('REDIS_HOST', 'localhost'),
+        port=int(os.environ.get('REDIS_PORT', 6379)),
+        db=0,
+        decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5
+    )
+    # Test connection
+    redis_client.ping()
+    logger.info("💾 Redis cache connected")
+except Exception as e:
+    logger.warning(f"⚠️  Redis unavailable - using memory cache only")
+    redis_client = None
+
+def get_cache_key(user_id, question):
+    """Generate cache key for query responses"""
+    content = f"{user_id}:{question}"
+    return f"query:{hashlib.md5(content.encode()).hexdigest()}"
+
+def get_cached_response(user_id, question):
+    """Get cached response if available"""
+    if not redis_client:
+        return None
+    
+    try:
+        cache_key = get_cache_key(user_id, question)
+        cached = redis_client.get(cache_key)
+        if cached:
+            logger.info(f"💰 Cache hit: {question[:30]}...")
+            return json.loads(cached)
+    except Exception as e:
+        logger.warning(f"Cache read error: {e}")
+    return None
+
+def cache_response(user_id, question, response_data):
+    """Cache response with 1 hour TTL"""
+    if not redis_client:
+        return
+    
+    try:
+        cache_key = get_cache_key(user_id, question)
+        redis_client.setex(cache_key, 3600, json.dumps(response_data))  # 1 hour TTL
+        logger.debug(f"💾 Cached: {question[:30]}...")
+    except Exception as e:
+        logger.warning(f"Cache write error: {e}")
+
+# Cache for FAISS indices
+@lru_cache(maxsize=100)
+def get_cached_faiss_index(user_id, index_path_hash):
+    """Cache FAISS indices in memory to avoid disk I/O"""
+    return faiss.read_index(user_data[user_id]['index_path'])
+
+@lru_cache(maxsize=100) 
+def get_cached_documents(user_id, docs_path_hash):
+    """Cache document chunks in memory"""
+    with open(user_data[user_id]['docs_path'], "r") as f:
+        return [Document.parse_obj(doc) for doc in json.load(f)]
+
+def get_embeddings_model():
+    """Get singleton embeddings model to avoid recreation"""
+    global _embeddings_cache
+    with _embeddings_lock:
+        if _embeddings_cache is None:
+            _embeddings_cache = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+            logger.info("Created new embeddings model instance")
+        return _embeddings_cache
+
+def cleanup_inactive_sessions():
+    """Clean up sessions that haven't been accessed in 30 minutes"""
+    current_time = time.time()
+    with user_data_lock:
+        inactive_users = []
+        for user_id, data in user_data.items():
+            if current_time - data.get('last_access', 0) > 1800:  # 30 minutes
+                inactive_users.append(user_id)
+        
+        for user_id in inactive_users:
+            try:
+                user_folder = user_data[user_id]['folder']
+                if os.path.exists(user_folder):
+                    shutil.rmtree(user_folder)
+                del user_data[user_id]
+                logger.info(f"Cleaned up inactive session: {user_id}")
+            except Exception as e:
+                logger.error(f"Error cleaning up session {user_id}: {e}")
+
+# Start background cleanup thread
+import threading
+cleanup_thread = threading.Thread(target=lambda: [time.sleep(600), cleanup_inactive_sessions()], daemon=True)
+cleanup_thread.start()
 
 @app.route('/', methods=['GET'])
 def index():
@@ -105,6 +214,12 @@ def before_request():
     logger.debug(f"Request headers: {dict(request.headers)}")
     logger.debug(f"Request args: {dict(request.args)}")
     
+    # Memory monitoring
+    memory_usage = psutil.Process().memory_info().rss / 1024 / 1024
+    if memory_usage > 500:  # 500MB threshold
+        logger.warning(f"High memory usage: {memory_usage:.2f}MB")
+        gc.collect()
+    
     # Try to get user_id from custom header first, then from session
     user_id = request.headers.get('X-User-ID')
     logger.debug(f"X-User-ID header value: {user_id}")
@@ -122,17 +237,21 @@ def before_request():
     
     logger.debug(f"Final user_id: {user_id}")
     
-    if user_id not in user_data:
-        user_folder = os.path.join(UPLOAD_FOLDER, user_id)
-        os.makedirs(user_folder, exist_ok=True)
-        user_data[user_id] = {
-            'folder': user_folder,
-            'index_path': os.path.join(user_folder, 'faiss_index.bin'),
-            'docs_path': os.path.join(user_folder, 'documents.json')
-        }
-        logger.info(f"Created user folder structure for {user_id}: {user_folder}")
-    else:
-        logger.debug(f"User data already exists for {user_id}")
+    with user_data_lock:
+        if user_id not in user_data:
+            user_folder = os.path.join(UPLOAD_FOLDER, user_id)
+            os.makedirs(user_folder, exist_ok=True)
+            user_data[user_id] = {
+                'folder': user_folder,
+                'index_path': os.path.join(user_folder, 'faiss_index.bin'),
+                'docs_path': os.path.join(user_folder, 'documents.json'),
+                'chat_history': [],  # Store conversation history
+                'last_access': time.time()
+            }
+            logger.info(f"Created user folder structure for {user_id}: {user_folder}")
+        else:
+            user_data[user_id]['last_access'] = time.time()
+            logger.debug(f"User data already exists for {user_id}")
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -225,6 +344,12 @@ def query_documents():
     question = data['question']
     logger.info(f"User question: '{question}'")
 
+    # Check cache first
+    cached_response = get_cached_response(user_id, question)
+    if cached_response:
+        logger.info("Returning cached response")
+        return jsonify(cached_response), 200
+
     try:
         index_path = user_data[user_id]['index_path']
         docs_path = user_data[user_id]['docs_path']
@@ -236,17 +361,18 @@ def query_documents():
             logger.error(f"Required files missing - Index exists: {os.path.exists(index_path)}, Docs exist: {os.path.exists(docs_path)}")
             return jsonify({'error': 'Please upload documents first'}), 400
         
-        logger.info("Step 1: Loading FAISS index")
-        index = faiss.read_index(index_path)
+        logger.info("Step 1: Loading FAISS index (cached)")
+        index_hash = str(hash(index_path + str(os.path.getmtime(index_path))))
+        index = get_cached_faiss_index(user_id, index_hash)
         logger.debug(f"FAISS index loaded successfully. Total vectors: {index.ntotal}")
         
-        logger.info("Step 2: Loading document chunks")
-        with open(docs_path, "r") as f:
-            documents = [Document.parse_obj(doc) for doc in json.load(f)]
+        logger.info("Step 2: Loading document chunks (cached)")
+        docs_hash = str(hash(docs_path + str(os.path.getmtime(docs_path))))
+        documents = get_cached_documents(user_id, docs_hash)
         logger.debug(f"Loaded {len(documents)} document chunks")
 
-        logger.info("Step 3: Generating query embedding")
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        logger.info("Step 3: Generating query embedding (optimized)")
+        embeddings = get_embeddings_model()
         query_vector = embeddings.embed_query(question)
         logger.debug(f"Query embedding generated. Vector dimension: {len(query_vector)}")
         
@@ -264,27 +390,69 @@ def query_documents():
 
         logger.info("Step 6: Initializing LLM and generating response")
         llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
+        # Get chat history for context awareness
+        chat_history = user_data[user_id].get('chat_history', [])
+        history_context = ""
+        if chat_history:
+            recent_history = chat_history[-3:]  # Use last 3 conversations for context
+            history_context = "\n\n--- Previous Conversation Context ---\n"
+            for i, conv in enumerate(recent_history, 1):
+                history_context += f"Previous Q{i}: {conv['question']}\n"
+                history_context += f"Previous A{i}: {conv['answer'][:200]}...\n\n"
+            history_context += "--- End Previous Context ---\n\n"
+        
         prompt = ChatPromptTemplate.from_template("""
-        Answer the questions based on the provided context only.
-        Please provide the most accurate response based on the question
-        <context>
+        Answer the questions based on the provided context and previous conversation history.
+        Please provide the most accurate response based on the question and maintain conversation continuity.
+        
+        {history_context}
+        
+        <current_context>
         {context}
-        </context>
-        Question: {input}
+        </current_context>
+        
+        Current Question: {input}
+        
+        Instructions:
+        - Use the current context as the primary source for factual information
+        - Reference previous conversations when relevant for continuity
+        - If the question refers to something from previous conversation, acknowledge it
+        - Provide comprehensive and contextually aware responses
         """)
         chain = prompt | llm
         
         logger.debug("Sending request to LLM...")
-        response = chain.invoke({"context": "\n".join(context), "input": question})
+        response = chain.invoke({
+            "context": "\n".join(context), 
+            "input": question,
+            "history_context": history_context
+        })
         logger.info(f"LLM response generated. Length: {len(response.content)} characters")
         logger.debug(f"LLM response (first 200 chars): {response.content[:200]}...")
+
+        # Store conversation in chat history
+        with user_data_lock:
+            user_data[user_id]['chat_history'].append({
+                'timestamp': datetime.datetime.now().isoformat(),
+                'question': question,
+                'answer': response.content,
+                'context_chunks': len(context)
+            })
+            
+            # Keep only last 10 conversations to manage memory
+            if len(user_data[user_id]['chat_history']) > 10:
+                user_data[user_id]['chat_history'] = user_data[user_id]['chat_history'][-10:]
 
         result = {
             'answer': response.content,
             'context': context,
             'num_chunks_used': len(context),
-            'similarity_scores': D[0].tolist()
+            'similarity_scores': D[0].tolist(),
+            'chat_history': user_data[user_id]['chat_history']
         }
+        
+        # Cache the response for future identical queries
+        cache_response(user_id, question, result)
         
         logger.info("=== QUERY REQUEST COMPLETED SUCCESSFULLY ===")
         return jsonify(result), 200
@@ -294,11 +462,36 @@ def query_documents():
         logger.error("=== QUERY REQUEST FAILED ===")
         return jsonify({'error': str(e)}), 500
 
+async def async_embed_documents(embeddings, documents):
+    """Asynchronously generate embeddings for multiple documents"""
+    loop = asyncio.get_event_loop()
+    
+    def embed_chunk(doc_content):
+        return embeddings.embed_query(doc_content)
+    
+    # Process embeddings concurrently in batches
+    batch_size = 10
+    all_vectors = []
+    
+    for i in range(0, len(documents), batch_size):
+        batch = documents[i:i + batch_size]
+        logger.debug(f"Processing embedding batch {i//batch_size + 1}/{(len(documents) + batch_size - 1)//batch_size}")
+        
+        # Run batch in thread pool to avoid blocking
+        tasks = [loop.run_in_executor(executor, embed_chunk, doc.page_content) for doc in batch]
+        batch_vectors = await asyncio.gather(*tasks)
+        all_vectors.extend(batch_vectors)
+        
+        # Small delay to prevent API rate limiting
+        await asyncio.sleep(0.1)
+    
+    return all_vectors
+
 def vector_embedding(pdf_folder, user_id):
     logger.info(f"=== VECTOR EMBEDDING PROCESS STARTED for user {user_id} ===")
     try:
-        logger.info("Step 1: Initializing Google embeddings")
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        logger.info("Step 1: Initializing Google embeddings (cached)")
+        embeddings = get_embeddings_model()
         logger.debug("Google embeddings initialized successfully")
         
         logger.info("Step 2: Loading PDF documents")
@@ -323,17 +516,21 @@ def vector_embedding(pdf_folder, user_id):
         index = faiss.IndexFlatL2(dimension)
         logger.debug("FAISS index created")
 
-        logger.info("Step 5: Generating embeddings and adding to index")
-        for i, doc in enumerate(final_documents):
-            if i % 10 == 0:  # Log progress every 10 documents
-                logger.debug(f"Processing chunk {i+1}/{len(final_documents)}")
-            
-            vec = embeddings.embed_query(doc.page_content)
-            index.add(np.array([vec]))
+        logger.info("Step 5: Generating embeddings asynchronously")
+        # Run async embedding generation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            vectors = loop.run_until_complete(async_embed_documents(embeddings, final_documents))
+        finally:
+            loop.close()
         
+        logger.info("Step 6: Adding vectors to FAISS index")
+        vectors_array = np.array(vectors)
+        index.add(vectors_array)
         logger.info(f"Added {index.ntotal} vectors to FAISS index")
         
-        logger.info("Step 6: Saving FAISS index and documents")
+        logger.info("Step 7: Saving FAISS index and documents")
         index_path = user_data[user_id]['index_path']
         docs_path = user_data[user_id]['docs_path']
         
@@ -350,7 +547,10 @@ def vector_embedding(pdf_folder, user_id):
         logger.info(f"Index file size: {index_size} bytes")
         logger.info(f"Documents file size: {docs_size} bytes")
 
-        logger.info(f"=== VECTOR EMBEDDING COMPLETED SUCCESSFULLY for user {user_id} ===")
+        logger.info(f"=== VECTOR EMBEDDING COMPLETED SUCCESSFULLY for user {user_id} ===\nClearning caches for updated data...")
+        # Clear caches for this user since data was updated
+        get_cached_faiss_index.cache_clear()
+        get_cached_documents.cache_clear()
         
     except Exception as e:
         logger.exception(f"Error during vector embedding for user {user_id}: {str(e)}")
@@ -440,12 +640,12 @@ def status_check():
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    logger.info(f"Starting FileGenie server on port {port}")
-    logger.info(f"Server will be available at: http://localhost:{port}")
-    logger.info("Available endpoints:")
-    logger.info("  GET  /health - Health check")
-    logger.info("  GET  /status - Session status")
-    logger.info("  POST /upload - Upload PDF files")
-    logger.info("  POST /query - Ask questions")
-    logger.info("  POST /cleanup - Clean session")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    logger.info(f"🚀 FileGenie RAG API starting on port {port}")
+    logger.info(f"🌐 Available at: http://localhost:{port}")
+    logger.info(f"💾 Cache: {'Redis' if redis_client else 'Memory only'}")
+    logger.info(f"🔧 Mode: {'Development' if is_debug else 'Production'}")
+    logger.info("")
+    logger.info("👀 Watch for these log patterns:")
+    logger.info("   🆕 New session | 📁 Workspace | 📤 Upload | 🧠 RAG | ❓ Query")
+    
+    app.run(host='0.0.0.0', port=port, debug=is_debug)
