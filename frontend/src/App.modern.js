@@ -10,7 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { useAppStore } from './store/useAppStore';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://filegenie.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+if (!BACKEND_URL) {
+    console.error('REACT_APP_BACKEND_URL environment variable is not set');
+}
 
 const axiosConfig = {
     withCredentials: true,
