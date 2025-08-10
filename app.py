@@ -67,13 +67,16 @@ CORS(app, resources={r"/*": {
         "http://localhost:3001",
         "https://filegenie-1.onrender.com",
         "https://filegenie.nehanworks.space",
+        "https://filegenie.nehanworks.space/",
         "https://filegenie.onrender.com",
         "https://nehanworks.space"
     ],
     "supports_credentials": True,
-    "allow_headers": ["Content-Type", "Authorization", "X-User-ID"],
-    "methods": ["GET", "POST", "OPTIONS"],
-    "expose_headers": ["Content-Range", "X-Content-Range"]
+    "allow_headers": ["Content-Type", "Authorization", "X-User-ID", "Accept", "Accept-Language", "Accept-Encoding"],
+    "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+    "expose_headers": ["Content-Range", "X-Content-Range"],
+    "send_wildcard": False,
+    "always_send": True
 }})
 
 # Get API keys from environment variables

@@ -5,7 +5,11 @@ import { loadFull } from "tsparticles";
 import './App.css';
 import FileGenieShowcase from './FileGenieShowcase';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://filegenie.onrender.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+if (!BACKEND_URL) {
+    console.error('REACT_APP_BACKEND_URL environment variable is not set');
+}
 
 const axiosConfig = {
     withCredentials: true,
