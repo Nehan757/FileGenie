@@ -9,19 +9,14 @@ FileGenie is an advanced document Q&A application I developed to showcase my ski
 - **Backend**: Python, Flask
 - **AI & Machine Learning**: Langchain, Google Generative AI, Groq
 - **Database**: FAISS (Facebook AI Similarity Search)
-- **Cloud Deployment**: Render, AWS
+- **Cloud Deployment**: AWS EC2, Nginx, Let's Encrypt (SSL)
 - **Version Control**: Git, GitHub
 - **API Integration**: RESTful API design and implementation
 - **Security**: AWS S3, AWS Secrets Manager, CORS configuration
 
 ### 🔗 Live Demo
 
-Experience FileGenie in action: [https://filegenie.nehanworks.site](https://filegenie-1.onrender.com/)
-
-### ⚡ **Important Note for Recruiters/Reviewers**
-This demo runs on **free-tier cloud hosting**. The first request after inactivity may take **30-60 seconds** due to cold start - this is a hosting limitation, not application performance. Subsequent requests are instant.
-
-**For production deployment**, this application would run on dedicated infrastructure with instant response times.
+Experience FileGenie in action: [https://filegenie.nehanworks.site](https://filegenie.nehanworks.site)
 
 ## Prerequisites
 
