@@ -7,11 +7,7 @@ import ThemeToggle from './components/ThemeToggle';
 import useThemeStore from './store/useThemeStore';
 import { Sparkles } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-if (!BACKEND_URL) {
-    console.error('REACT_APP_BACKEND_URL environment variable is not set');
-}
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 
 function App() {
     const [files, setFiles] = useState([]);
