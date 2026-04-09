@@ -171,7 +171,7 @@ def get_embeddings_model():
     global _embeddings_cache
     with _embeddings_lock:
         if _embeddings_cache is None:
-            _embeddings_cache = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+            _embeddings_cache = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
             logger.info("Created new embeddings model instance")
         return _embeddings_cache
 
@@ -396,7 +396,7 @@ def query_documents():
             logger.debug(f"Context chunk {i+1} (first 100 chars): {chunk[:100]}...")
 
         logger.info("Step 6: Initializing LLM and generating response")
-        llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
+        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-8b-instant")
         # Get chat history for context awareness
         chat_history = user_data[user_id].get('chat_history', [])
         history_context = ""
