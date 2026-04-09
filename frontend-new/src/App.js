@@ -6,7 +6,7 @@ import ChatInterface from './components/ChatInterface';
 import ThemeToggle from './components/ThemeToggle';
 import Toast from './components/Toast';
 import useThemeStore from './store/useThemeStore';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Trash2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -19,6 +19,28 @@ function App() {
     const [isUploading, setIsUploading] = useState(true);
     const [userId, setUserId] = useState(null);
     const [toast, setToast] = useState(null);
+    const [cleaning, setCleaning] = useState(false);
+
+    const handleCleanup = async () => {
+        setCleaning(true);
+        try {
+            const response = await fetch(`${BACKEND_URL}/cleanup`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { ...(userId && { 'X-User-ID': userId }) }
+            });
+            const data = await response.json();
+            setUserId(null);
+            setFiles([]);
+            setAnswer('');
+            setContext([]);
+            setToast({ type: 'success', message: 'Vector DB cleared successfully.' });
+        } catch (err) {
+            setToast({ type: 'error', message: 'Failed to clear Vector DB.' });
+        } finally {
+            setCleaning(false);
+        }
+    };
 
     const { initializeTheme } = useThemeStore();
 
@@ -100,8 +122,8 @@ function App() {
     };
 
     return (
-        {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900 transition-all duration-500">
+            {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
             {/* Animated Background Shapes */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
@@ -255,6 +277,20 @@ function App() {
                         </motion.div>
                     ))}
                 </motion.div>
+            </div>
+
+            {/* Cleanup Button - bottom right */}
+            <div className="fixed bottom-6 right-6 z-50 group">
+                <button
+                    onClick={handleCleanup}
+                    disabled={cleaning}
+                    className="w-12 h-12 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                >
+                    <Trash2 className={`w-5 h-5 ${cleaning ? 'animate-pulse' : ''}`} />
+                </button>
+                <span className="absolute bottom-14 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    Clear Vector DB
+                </span>
             </div>
         </div>
     );
