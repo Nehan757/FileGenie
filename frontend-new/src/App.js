@@ -4,6 +4,7 @@ import './App.css';
 import FileUpload from './components/FileUpload';
 import ChatInterface from './components/ChatInterface';
 import ThemeToggle from './components/ThemeToggle';
+import Toast from './components/Toast';
 import useThemeStore from './store/useThemeStore';
 import { Sparkles } from 'lucide-react';
 
@@ -17,6 +18,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(true);
     const [userId, setUserId] = useState(null);
+    const [toast, setToast] = useState(null);
 
     const { initializeTheme } = useThemeStore();
 
@@ -54,14 +56,15 @@ function App() {
             });
             
             const data = await response.json();
-            console.log('Upload successful:', data);
-            
-            if (data.user_id) {
-                setUserId(data.user_id);
-                console.log('Stored user_id:', data.user_id);
+            if (!response.ok) {
+                setToast({ type: 'error', message: data.error || 'Upload failed. Please try again.' });
+            } else {
+                setToast({ type: 'success', message: `${data.files_processed?.length || 'Your'} file(s) processed successfully!` });
+                if (data.user_id) setUserId(data.user_id);
             }
         } catch (err) {
             console.error('Upload error:', err);
+            setToast({ type: 'error', message: 'Upload failed. Check your connection.' });
         } finally {
             setLoading(false);
         }
@@ -97,6 +100,7 @@ function App() {
     };
 
     return (
+        {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
         <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900 transition-all duration-500">
             {/* Animated Background Shapes */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
