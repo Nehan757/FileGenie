@@ -60,17 +60,21 @@ app.config.update(
 )
 Session(app)
 
+# Build CORS origins — change DOMAIN in .env when switching domains
+_domain = os.environ.get('DOMAIN', 'nehanworks.site')
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://filegenie-1.onrender.com",
+    "https://filegenie.onrender.com",
+    f"https://filegenie.{_domain}",
+    f"https://filegenie.{_domain}/",
+    f"https://{_domain}",
+]
+
 # Update CORS configuration to allow credentials
 CORS(app, resources={r"/*": {
-    "origins": [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://filegenie-1.onrender.com",
-        "https://filegenie.nehanworks.space",
-        "https://filegenie.nehanworks.space/",
-        "https://filegenie.onrender.com",
-        "https://nehanworks.space"
-    ],
+    "origins": _allowed_origins,
     "supports_credentials": True,
     "allow_headers": ["Content-Type", "Authorization", "X-User-ID", "Accept", "Accept-Language", "Accept-Encoding"],
     "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],

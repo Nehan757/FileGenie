@@ -16,7 +16,7 @@ FileGenie is an advanced document Q&A application I developed to showcase my ski
 
 ### 🔗 Live Demo
 
-Experience FileGenie in action: [https://filegenie.nehanworks.space](https://filegenie-1.onrender.com/)
+Experience FileGenie in action: [https://filegenie.nehanworks.site](https://filegenie-1.onrender.com/)
 
 ### ⚡ **Important Note for Recruiters/Reviewers**
 This demo runs on **free-tier cloud hosting**. The first request after inactivity may take **30-60 seconds** due to cold start - this is a hosting limitation, not application performance. Subsequent requests are instant.
