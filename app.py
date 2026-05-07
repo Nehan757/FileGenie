@@ -437,14 +437,16 @@ def query_documents():
         logger.info(f"LLM response generated. Length: {len(response.content)} characters")
         logger.debug(f"LLM response (first 200 chars): {response.content[:200]}...")
 
-        # Store conversation in chat history
+        # Store conversation in chat history (skip if response looks like a prompt leak)
+        is_valid_response = '</current_context>' not in response.content and 'Current Question' not in response.content
         with user_data_lock:
-            user_data[user_id]['chat_history'].append({
-                'timestamp': datetime.datetime.now().isoformat(),
-                'question': question,
-                'answer': response.content,
-                'context_chunks': len(context)
-            })
+            if is_valid_response:
+                user_data[user_id]['chat_history'].append({
+                    'timestamp': datetime.datetime.now().isoformat(),
+                    'question': question,
+                    'answer': response.content,
+                    'context_chunks': len(context)
+                })
             
             # Keep only last 10 conversations to manage memory
             if len(user_data[user_id]['chat_history']) > 10:
@@ -563,6 +565,82 @@ def vector_embedding(pdf_folder, user_id):
         logger.exception(f"Error during vector embedding for user {user_id}: {str(e)}")
         logger.error(f"=== VECTOR EMBEDDING FAILED for user {user_id} ===")
         raise
+
+@app.route('/upload_direct/<token>', methods=['PUT'])
+def upload_direct(token):
+    """
+    Receives a raw PDF binary uploaded via a pre-signed token.
+    Called by Claude's code execution sandbox after request_upload_url MCP tool.
+    """
+    logger.info(f"=== DIRECT UPLOAD REQUEST for token {token} ===")
+
+    # Validate token from Redis
+    if not redis_client:
+        return jsonify({'error': 'Redis unavailable — direct upload not supported'}), 503
+
+    token_key = f"upload_token:{token}"
+    token_data = redis_client.get(token_key)
+
+    if not token_data:
+        logger.error(f"Invalid or expired token: {token}")
+        return jsonify({'error': 'Invalid or expired upload token'}), 401
+
+    info = json.loads(token_data)
+    user_id = info['user_id']
+    filename = secure_filename(info['filename'])
+
+    # Single-use — delete immediately
+    redis_client.delete(token_key)
+    logger.info(f"Token consumed for user: {user_id}, file: {filename}")
+
+    # Validate content
+    pdf_bytes = request.data
+    if not pdf_bytes:
+        return jsonify({'error': 'Empty request body'}), 400
+
+    if len(pdf_bytes) > 20 * 1024 * 1024:  # 20MB limit
+        return jsonify({'error': 'File too large (max 20MB)'}), 413
+
+    try:
+        # Ensure user session exists
+        with user_data_lock:
+            if user_id not in user_data:
+                user_folder = os.path.join(UPLOAD_FOLDER, user_id)
+                os.makedirs(user_folder, exist_ok=True)
+                user_data[user_id] = {
+                    'folder': user_folder,
+                    'index_path': os.path.join(user_folder, 'faiss_index.bin'),
+                    'docs_path': os.path.join(user_folder, 'documents.json'),
+                    'chat_history': [],
+                    'last_access': time.time()
+                }
+
+        user_folder = user_data[user_id]['folder']
+
+        # Clear previous files
+        for f in os.listdir(user_folder):
+            os.remove(os.path.join(user_folder, f))
+
+        # Save PDF
+        file_path = os.path.join(user_folder, filename)
+        with open(file_path, 'wb') as f:
+            f.write(pdf_bytes)
+        logger.info(f"Saved {len(pdf_bytes)} bytes to {file_path}")
+
+        # Run embedding pipeline
+        vector_embedding(user_folder, user_id)
+
+        logger.info("=== DIRECT UPLOAD COMPLETED SUCCESSFULLY ===")
+        return jsonify({
+            'message': 'File processed successfully',
+            'files_processed': [filename],
+            'user_id': user_id
+        }), 200
+
+    except Exception as e:
+        logger.exception(f"Direct upload failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/cleanup', methods=['POST'])
 def cleanup_session():

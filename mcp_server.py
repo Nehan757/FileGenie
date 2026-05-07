@@ -12,8 +12,15 @@ Tools exposed:
 """
 
 import httpx
+import redis
+import uuid
+import json
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
+
+PUBLIC_BASE_URL = "https://filegenie.nehanworks.site"
+
+redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 BACKEND_URL = "http://localhost:5000"
 
@@ -32,6 +39,45 @@ mcp = FastMCP(
         ],
     )
 )
+
+
+@mcp.tool()
+def request_upload_url(filename: str, user_id: str = "mcp-default-user") -> str:
+    """
+    Generate a pre-signed upload URL for uploading a PDF to FileGenie.
+    Returns a signed URL and instructions for uploading via curl.
+
+    Workflow:
+      1. Call this tool to get a signed URL
+      2. Use curl in code execution to PUT the file to that URL
+      3. Call query_documents with the same user_id
+
+    Args:
+        filename: Name of the PDF file to upload (e.g. "resume.pdf")
+        user_id:  Session ID to associate this upload with.
+    """
+    if not filename.lower().endswith(".pdf"):
+        return "Error: only PDF files are supported."
+
+    token = str(uuid.uuid4())
+    token_key = f"upload_token:{token}"
+
+    token_data = json.dumps({"user_id": user_id, "filename": filename})
+    redis_client.setex(token_key, 600, token_data)  # 10 minute TTL
+
+    upload_url = f"{PUBLIC_BASE_URL}/upload_direct/{token}"
+
+    return (
+        f"Upload URL ready (valid for 10 minutes):\n\n"
+        f"Run this curl command in code execution:\n\n"
+        f"```bash\n"
+        f'curl -X PUT "{upload_url}" \\\n'
+        f'  --data-binary @/path/to/{filename} \\\n'
+        f'  -H "Content-Type: application/pdf"\n'
+        f"```\n\n"
+        f"Replace /path/to/{filename} with the actual file path.\n"
+        f"After upload completes, call query_documents with user_id: {user_id}"
+    )
 
 
 @mcp.tool()
