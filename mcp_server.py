@@ -95,12 +95,13 @@ def get_status(user_id: str = "mcp-default-user") -> str:
 
 if __name__ == "__main__":
     import uvicorn
-    # SSE transport — Claude.ai connectors connect to /sse
-    app = mcp.sse_app()
+    # mount_path tells the server it's served under /mcp/ via nginx
+    # so it returns /mcp/messages/?session_id=xxx instead of /messages/?session_id=xxx
+    app = mcp.sse_app(mount_path="/mcp")
     uvicorn.run(
         app,
         host="0.0.0.0",
         port=5001,
-        forwarded_allow_ips="*",  # trust nginx X-Forwarded-For
+        forwarded_allow_ips="*",
         proxy_headers=True
     )
