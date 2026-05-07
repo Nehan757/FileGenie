@@ -13,10 +13,25 @@ Tools exposed:
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 BACKEND_URL = "http://localhost:5000"
 
-mcp = FastMCP("FileGenie")
+mcp = FastMCP(
+    "FileGenie",
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[
+            "filegenie.nehanworks.site",
+            "localhost:5001",
+            "127.0.0.1:5001",
+        ],
+        allowed_origins=[
+            "https://filegenie.nehanworks.site",
+            "https://claude.ai",
+        ],
+    )
+)
 
 
 @mcp.tool()
@@ -82,4 +97,10 @@ if __name__ == "__main__":
     import uvicorn
     # SSE transport — Claude.ai connectors connect to /sse
     app = mcp.sse_app()
-    uvicorn.run(app, host="0.0.0.0", port=5001)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=5001,
+        forwarded_allow_ips="*",  # trust nginx X-Forwarded-For
+        proxy_headers=True
+    )
