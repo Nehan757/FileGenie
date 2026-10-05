@@ -47,11 +47,11 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Session configuration - detect environment
-is_production = os.environ.get('RENDER') or os.environ.get('VERCEL')
+is_production = os.environ.get('RENDER') or os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
 is_debug = not is_production and os.environ.get('FLASK_ENV') != 'production'
 
 app.config.update(
-    SECRET_KEY=os.environ.get('SECRET_KEY', 'filegenie-development-key-12345'),
+    SECRET_KEY=os.environ.get('SECRET_KEY') or os.urandom(32),
     SESSION_TYPE='filesystem',
     SESSION_COOKIE_SECURE=is_production,  # True for HTTPS in production, False for local HTTP
     SESSION_COOKIE_SAMESITE='None' if is_production else 'Lax',  # None for cross-domain in production
