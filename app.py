@@ -28,6 +28,7 @@ import psutil
 import gc
 import redis
 import hashlib
+import boto3
 
 # Load environment variables
 load_dotenv()
@@ -100,6 +101,46 @@ user_data_lock = threading.RLock()
 _embeddings_cache = None
 _embeddings_lock = threading.Lock()
 executor = ThreadPoolExecutor(max_workers=4)
+
+# Lambda persistence: keep durable user state in S3 while using /tmp for local processing.
+FILEGENIE_BUCKET = os.environ.get("FILEGENIE_BUCKET")
+s3_client = boto3.client("s3") if FILEGENIE_BUCKET else None
+
+def _s3_key(user_id, name):
+    return f"users/{user_id}/{name}"
+
+def _download_user_state(user_id, user_folder):
+    if not s3_client or not FILEGENIE_BUCKET:
+        return
+    state_files = {
+        "faiss_index.bin": os.path.join(user_folder, "faiss_index.bin"),
+        "documents.json": os.path.join(user_folder, "documents.json"),
+        "chat_history.json": os.path.join(user_folder, "chat_history.json"),
+    }
+    for name, local_path in state_files.items():
+        try:
+            s3_client.download_file(FILEGENIE_BUCKET, _s3_key(user_id, name), local_path)
+        except Exception as exc:
+            if getattr(exc, "response", {}).get("Error", {}).get("Code") not in ("404", "NoSuchKey", "AccessDenied"):
+                logger.warning(f"S3 restore failed for {name}: {exc}")
+
+def _upload_user_state(user_id, files):
+    if not s3_client or not FILEGENIE_BUCKET:
+        return
+    for local_path in files:
+        if os.path.exists(local_path):
+            s3_client.upload_file(local_path, FILEGENIE_BUCKET, _s3_key(user_id, os.path.basename(local_path)))
+
+def _delete_user_state(user_id):
+    if not s3_client or not FILEGENIE_BUCKET:
+        return
+    try:
+        listed = s3_client.list_objects_v2(Bucket=FILEGENIE_BUCKET, Prefix=f"users/{user_id}/")
+        objects = [{"Key": item["Key"]} for item in listed.get("Contents", [])]
+        if objects:
+            s3_client.delete_objects(Bucket=FILEGENIE_BUCKET, Delete={"Objects": objects})
+    except Exception as exc:
+        logger.warning(f"S3 cleanup failed for user {user_id}: {exc}")
 
 # Redis cache for query responses (optional - falls back to memory if Redis unavailable)
 try:
@@ -251,6 +292,15 @@ def before_request():
                 'chat_history': [],  # Store conversation history
                 'last_access': time.time()
             }
+            if FILEGENIE_BUCKET:
+                _download_user_state(user_id, user_folder)
+                history_path = os.path.join(user_folder, 'chat_history.json')
+                if os.path.exists(history_path):
+                    try:
+                        with open(history_path, "r") as f:
+                            user_data[user_id]["chat_history"] = json.load(f)
+                    except Exception as exc:
+                        logger.warning(f"Could not restore chat history: {exc}")
             logger.info(f"Created user folder structure for {user_id}: {user_folder}")
         else:
             user_data[user_id]['last_access'] = time.time()
@@ -441,10 +491,15 @@ def query_documents():
                 'answer': response.content,
                 'context_chunks': len(context)
             })
-            
+
             # Keep only last 10 conversations to manage memory
             if len(user_data[user_id]['chat_history']) > 10:
                 user_data[user_id]['chat_history'] = user_data[user_id]['chat_history'][-10:]
+
+            history_path = os.path.join(user_data[user_id]['folder'], 'chat_history.json')
+            with open(history_path, "w") as f:
+                json.dump(user_data[user_id]['chat_history'], f)
+            _upload_user_state(user_id, [history_path])
 
         result = {
             'answer': response.content,
@@ -549,6 +604,7 @@ def vector_embedding(pdf_folder, user_id):
         docs_size = os.path.getsize(docs_path)
         logger.info(f"Index file size: {index_size} bytes")
         logger.info(f"Documents file size: {docs_size} bytes")
+        _upload_user_state(user_id, [index_path, docs_path])
 
         logger.info(f"=== VECTOR EMBEDDING COMPLETED SUCCESSFULLY for user {user_id} ===\nClearning caches for updated data...")
         # Clear caches for this user since data was updated
@@ -572,6 +628,7 @@ def cleanup_session():
             logger.debug(f"Removing user folder: {user_folder}")
             
             # List files before deletion
+            _delete_user_state(user_id)
             if os.path.exists(user_folder):
                 files_to_delete = os.listdir(user_folder)
                 logger.debug(f"Files to delete: {files_to_delete}")
