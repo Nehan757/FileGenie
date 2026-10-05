@@ -183,7 +183,16 @@ useEffect(() => {
     }, []);
 
     const handleFileChange = (e) => {
-        const selectedFiles = Array.from(e.target.files);
+        const selectedFiles = Array.from(e.target.files).filter(
+            (file) => file.type === 'application/pdf'
+        );
+        const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+        const totalBytes = selectedFiles.reduce((total, file) => total + file.size, 0);
+        if (totalBytes > MAX_UPLOAD_BYTES) {
+            window.alert('Please keep the total PDF upload size under 5 MB.');
+            setFiles([]);
+            return;
+        }
         setFiles(selectedFiles);
     };
 
