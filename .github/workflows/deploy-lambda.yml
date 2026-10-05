@@ -31,13 +31,18 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Configure Lambda ECR pull policy
+        run: |
+          aws ecr set-repository-policy \
+            --repository-name "$ECR_REPOSITORY" \
+            --policy-text file://ecr-policy.json
+
       - name: Build and push image
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
           docker build -f Dockerfile -t "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA" .
           docker push "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
-
       - name: Deploy
         env:
           IMAGE_URI: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
