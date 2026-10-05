@@ -26,7 +26,15 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isUploading, setIsUploading] = useState(true); // Track whether we're uploading or querying
-    const [userId, setUserId] = useState(null); // Store user ID for session management
+    const [userId, setUserId] = useState(() => {
+        const existing = window.localStorage.getItem('filegenie_user_id');
+        if (existing) return existing;
+        const generated = window.crypto?.randomUUID
+            ? window.crypto.randomUUID()
+            : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+        window.localStorage.setItem('filegenie_user_id', generated);
+        return generated;
+    }); // Durable client identity for serverless sessions
 
     // Check if device is mobile
 useEffect(() => {
@@ -157,7 +165,13 @@ useEffect(() => {
     useEffect(() => {
         const cleanup = async () => {
             try {
-                await axios.post(`${BACKEND_URL}/cleanup`, {}, axiosConfig);
+                await axios.post(`${BACKEND_URL}/cleanup`, {}, {
+                    ...axiosConfig,
+                    headers: {
+                        ...axiosConfig.headers,
+                        ...(userId && { 'X-User-ID': userId })
+                    }
+                });
             } catch (err) {
                 console.error('Cleanup error:', err);
             }
