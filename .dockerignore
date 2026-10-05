@@ -1,0 +1,8 @@
+.git
+.github
+frontend
+frontend-new
+__pycache__
+*.pyc
+.env
+venv
