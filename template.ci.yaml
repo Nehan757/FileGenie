@@ -44,21 +44,6 @@ Resources:
             BucketName: !Ref FileGenieStorage
       FunctionUrlConfig:
         AuthType: NONE
-        Cors:
-          AllowOrigins:
-            - https://filegenie.nehanworks.space
-            - http://localhost:3000
-            - http://localhost:3001
-          AllowHeaders:
-            - content-type
-            - x-user-id
-            - authorization
-          AllowMethods:
-            - GET
-            - POST
-            - OPTIONS
-          AllowCredentials: true
-          MaxAge: 86400
 
 Outputs:
   FunctionUrl:
