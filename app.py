@@ -83,7 +83,8 @@ CORS(app, resources={r"/*": {
 # Get API keys from environment variables
 groq_api_key = os.getenv('GROQ_API_KEY')
 google_api_key = os.getenv("GOOGLE_API_KEY")
-os.environ["GOOGLE_API_KEY"] = google_api_key
+if google_api_key:
+    os.environ["GOOGLE_API_KEY"] = google_api_key
 
 logger.info(f"🧞 FileGenie RAG API initializing...")
 logger.info(f"🔑 Groq API: {'✓' if groq_api_key else '✗'}")
@@ -208,6 +209,8 @@ def get_embeddings_model():
     global _embeddings_cache
     with _embeddings_lock:
         if _embeddings_cache is None:
+            if not google_api_key:
+                raise RuntimeError("GOOGLE_API_KEY is not configured")
             _embeddings_cache = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
             logger.info("Created new embeddings model instance")
         return _embeddings_cache
@@ -442,6 +445,8 @@ def query_documents():
             logger.debug(f"Context chunk {i+1} (first 100 chars): {chunk[:100]}...")
 
         logger.info("Step 6: Initializing LLM and generating response")
+        if not groq_api_key:
+            raise RuntimeError("GROQ_API_KEY is not configured")
         llm = ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
         # Get chat history for context awareness
         chat_history = user_data[user_id].get('chat_history', [])
