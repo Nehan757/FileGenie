@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: FileGenie Lambda deployment
+
+Parameters:
+  ImageUri:
+    Type: String
+
+Resources:
+  FileGenieStorage:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: CleanupOldFiles
+            Status: Enabled
+            ExpirationInDays: 1
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FileGenieFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: filegenie-api
+      PackageType: Image
+      ImageUri: !Ref ImageUri
+      Timeout: 900
+      MemorySize: 2048
+      EphemeralStorage:
+        Size: 4096
+      Environment:
+        Variables:
+          FILEGENIE_BUCKET: !Ref FileGenieStorage
+          FLASK_ENV: production
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref FileGenieStorage
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            CorsConfiguration:
+              AllowOrigins: ['*']
+              AllowHeaders: [content-type, x-user-id, authorization]
+              AllowMethods: [GET, POST, OPTIONS]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  BucketName:
+    Value: !Ref FileGenieStorage
