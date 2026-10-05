@@ -42,17 +42,26 @@ Resources:
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref FileGenieStorage
-      Events:
-        Api:
-          Type: HttpApi
-          Properties:
-            CorsConfiguration:
-              AllowOrigins: ['*']
-              AllowHeaders: [content-type, x-user-id, authorization]
-              AllowMethods: [GET, POST, OPTIONS]
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - https://filegenie.nehanworks.space
+            - http://localhost:3000
+            - http://localhost:3001
+          AllowHeaders:
+            - content-type
+            - x-user-id
+            - authorization
+          AllowMethods:
+            - GET
+            - POST
+            - OPTIONS
+          AllowCredentials: true
+          MaxAge: 86400
 
 Outputs:
-  ApiUrl:
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  FunctionUrl:
+    Value: !GetAtt FileGenieFunctionUrlUrl.FunctionUrl
   BucketName:
     Value: !Ref FileGenieStorage
