@@ -503,9 +503,9 @@ const FileGenieShowcase = ({
             💼 Technical Implementation Notes
           </div>
           <div>
-            • <strong>Infrastructure:</strong> Demo hosted on free-tier hosting (cold starts expected)<br/>
+            • <strong>Infrastructure:</strong> Serverless AWS Lambda deployment (cold starts possible)<br/>
             • <strong>Production Ready:</strong> All code optimized for enterprise deployment<br/>
-            • <strong>Performance:</strong> First request after inactivity may take 30-60 seconds
+            • <strong>Performance:</strong> First request after inactivity may take longer
           </div>
           <div style={{ marginTop: '8px', fontSize: '12px', fontStyle: 'italic' }}>
             Full source code and deployment guides available on GitHub
