@@ -64,3 +64,5 @@ Flask-Session
 psutil
 gevent
 redis
+asgiref
+mangum
