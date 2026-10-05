@@ -62,6 +62,6 @@ Resources:
 
 Outputs:
   FunctionUrl:
-    Value: !GetAtt FileGenieFunctionUrlUrl.FunctionUrl
+    Value: !GetAtt FileGenieFunctionUrl.FunctionUrl
   BucketName:
     Value: !Ref FileGenieStorage
