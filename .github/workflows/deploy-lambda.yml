@@ -1,0 +1,52 @@
+name: Deploy FileGenie to AWS Lambda
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  ECR_REPOSITORY: filegenie
+  STACK_NAME: filegenie
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" >/dev/null 2>&1 ||             aws ecr create-repository --repository-name "$ECR_REPOSITORY"
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          docker build -f Dockerfile -t "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA" .
+          docker push "$REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
+
+      - name: Deploy
+        env:
+          IMAGE_URI: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+        run: |
+          aws cloudformation deploy             --template-file template.ci.yaml             --stack-name "$STACK_NAME"             --capabilities CAPABILITY_IAM             --parameter-overrides ImageUri="$IMAGE_URI"             --no-fail-on-empty-changeset
+
+      - name: Show outputs
+        run: |
+          aws cloudformation describe-stacks             --stack-name "$STACK_NAME"             --query 'Stacks[0].Outputs'             --output table
