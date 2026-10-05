@@ -7,6 +7,21 @@ Parameters:
     Type: String
 
 Resources:
+  FileGenieEcrPolicy:
+    Type: AWS::ECR::RepositoryPolicy
+    Properties:
+      RepositoryName: filegenie
+      PolicyText:
+        Version: '2008-10-17'
+        Statement:
+          - Sid: LambdaECRImageRetrievalPolicy
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - ecr:BatchGetImage
+              - ecr:GetDownloadUrlForLayer
+
   FileGenieStorage:
     Type: AWS::S3::Bucket
     Properties:
